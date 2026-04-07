@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Satınalma Talep Sistemi</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0c10;
+      --surface: #111318;
+      --surface-2: #181b23;
+      --border: #252833;
+      --accent: #e8c547;
+      --accent-dim: rgba(232, 197, 71, 0.12);
+      --accent-glow: rgba(232, 197, 71, 0.25);
+      --text: #e8eaf0;
+      --text-muted: #6b7280;
+      --text-dim: #9ca3af;
+      --green: #34d399;
+      --red: #f87171;
+      --blue: #60a5fa;
+      --radius: 10px;
+      --font-display: 'Syne', sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+      --font-body: 'IBM Plex Sans', sans-serif;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* ─── Login Gate ─── */
+    #login-gate {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .login-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 48px 40px;
+      width: 360px;
+      text-align: center;
+    }
+
+    .login-box .lock-icon {
+      font-size: 2.5rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .login-box h2 {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .login-box p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-bottom: 28px;
+    }
+
+    .login-box input {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+      letter-spacing: 3px;
+      text-align: center;
+      outline: none;
+      margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+
+    .login-box input:focus {
+      border-color: var(--accent);
+    }
+
+    .login-box button {
+      width: 100%;
+      background: var(--accent);
+      color: #0a0c10;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .login-box button:hover {
+      opacity: 0.85;
+    }
+
+    .login-error {
+      color: var(--red);
+      font-size: 0.8rem;
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* ─── Header ─── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 40px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .logo {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-badge {
+      background: var(--accent);
+      color: #0a0c10;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+      font-family: var(--font-mono);
+    }
+
+    nav {
+      display: flex;
+      gap: 4px;
+    }
+
+    nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      padding: 8px 16px;
+      border-radius: 7px;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    nav a:hover,
+    nav a.active {
+      color: var(--text);
+      background: var(--surface-2);
+    }
+
+    nav a.active {
+      color: var(--accent);
+    }
+
+    /* ─── Main Layout ─── */
+    main {
+      flex: 1;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+      width: 100%;
+    }
+
+    .page-header {
+      margin-bottom: 40px;
+    }
+
+    .page-header .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--accent);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .page-header h1 {
+      font-family: var(--font-display);
+      font-size: 2.1rem;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+    }
+
+    .page-header p {
+      color: var(--text-muted);
+      margin-top: 10px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    /* ─── Form Card ─── */
+    .form-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .form-section {
+      padding: 28px 32px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .form-section:last-child {
+      border-bottom: none;
+    }
+
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .form-grid.col2 {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .form-grid.col3 {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .field label {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text-dim);
+      letter-spacing: 0.02em;
+    }
+
+    .field label span.req {
+      color: var(--accent);
+      margin-left: 3px;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -webkit-appearance: none;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .field input.error,
+    .field select.error {
+      border-color: var(--red);
+    }
+
+    .field .err-msg {
+      font-size: 0.73rem;
+      color: var(--red);
+      display: none;
+      font-family: var(--font-mono);
+    }
+
+    .field input.error~.err-msg,
+    .field select.error~.err-msg {
+      display: block;
+    }
+
+    .field select option {
+      background: var(--surface-2);
+    }
+
+    .field textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    /* Price display */
+    .price-preview {
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-glow);
+      border-radius: 8px;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .price-preview .label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .price-preview .amount {
+      font-family: var(--font-mono);
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: var(--accent);
+    }
+
+    /* Submit section */
+    .form-footer {
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .form-footer .hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      max-width: 340px;
+    }
+
+    .btn-submit {
+      background: var(--accent);
+      color: #0a0c10;
+      border: none;
+      border-radius: 9px;
+      padding: 13px 30px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .btn-submit:hover {
+      opacity: 0.85;
+      transform: translateY(-1px);
+    }
+
+    .btn-submit:active {
+      transform: translateY(0);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-submit .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(0, 0, 0, 0.3);
+      border-top-color: #0a0c10;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    .btn-submit.loading .spinner {
+      display: block;
+    }
+
+    .btn-submit.loading .btn-text {
+      display: none;
+    }
+
+    /* ─── Success Toast ─── */
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      background: var(--surface);
+      border: 1px solid var(--green);
+      border-radius: 12px;
+      padding: 18px 22px;
+      max-width: 360px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      transform: translateY(120px);
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 200;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast .toast-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--green);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (max-width: 640px) {
+      header {
+        padding: 16px 20px;
+      }
+
+      main {
+        padding: 32px 16px 60px;
+      }
+
+      .form-grid.col2,
+      .form-grid.col3 {
+        grid-template-columns: 1fr;
+      }
+
+      .form-section {
+        padding: 22px 20px;
+      }
+
+      .form-footer {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .btn-submit {
+        justify-content: center;
+      }
+
+      .page-header h1 {
+        font-size: 1.6rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Login Gate -->
+  <div id="login-gate">
+    <div class="login-box">
+      <span class="lock-icon">🔐</span>
+      <h2>Erişim Şifresi</h2>
+      <p>Bu sisteme erişmek için şirket şifresini giriniz.</p>
+      <input type="password" id="login-input" placeholder="••••••••" maxlength="20">
+      <button onclick="checkLogin()">Giriş Yap</button>
+      <div class="login-error" id="login-error">Hatalı şifre. Tekrar deneyiniz.</div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      ◈ Tedarik Sistemi
+      <span class="logo-badge">v1.0</span>
+    </div>
+    <nav>
+      <a href="index.html" class="active">Talep Oluştur</a>
+      <a href="dashboard.html">Dashboard</a>
+    </nav>
+  </header>
+
+  <!-- Main -->
+  <main>
+    <div class="page-header">
+      <div class="eyebrow">// Yeni Talep</div>
+      <h1>Satınalma Talebi Oluştur</h1>
+      <p>Formu eksiksiz doldurun. Talebiniz yönetici onayına otomatik olarak iletilecektir.</p>
+    </div>
+
+    <form class="form-card" id="purchase-form" novalidate>
+
+      <!-- Talep Eden Bilgisi -->
+      <div class="form-section">
+        <div class="section-label">Talep Eden</div>
+        <div class="form-grid col2">
+          <div class="field">
+            <label>Ad Soyad <span class="req">*</span></label>
+            <input type="text" id="talep-eden" placeholder="Ahmet Yılmaz">
+            <span class="err-msg">Bu alan zorunludur.</span>
+          </div>
+          <div class="field">
+            <label>Departman <span class="req">*</span></label>
+            <select id="departman">
+              <option value="">— Seçiniz —</option>
+              <option>Üretim</option>
+              <option>Ar-Ge</option>
+              <option>İnsan Kaynakları</option>
+              <option>Finans</option>
+              <option>Bilgi Teknolojileri</option>
+              <option>Lojistik</option>
+              <option>Satış & Pazarlama</option>
+              <option>Genel Müdürlük</option>
+            </select>
+            <span class="err-msg">Departman seçimi zorunludur.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ürün Bilgisi -->
+      <div class="form-section">
+        <div class="section-label">Ürün / Hizmet Bilgisi</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Ürün / Hizmet Adı <span class="req">*</span></label>
+            <input type="text" id="urun-adi" placeholder="Örn: Laptop, Danışmanlık Hizmeti, Yazılım Lisansı…">
+            <span class="err-msg">Bu alan zorunludur.</span>
+          </div>
+          <div class="field">
+            <label>Açıklama / Notlar</label>
+            <textarea id="aciklama" placeholder="Teknik özellikler, marka tercihi veya ek notlar…"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fiyat Bilgisi -->
+      <div class="form-section">
+        <div class="section-label">Miktar & Fiyat</div>
+        <div class="form-grid col3">
+          <div class="field">
+            <label>Miktar <span class="req">*</span></label>
+            <input type="number" id="miktar" placeholder="1" min="1" step="1">
+            <span class="err-msg">Geçerli bir miktar giriniz.</span>
+          </div>
+          <div class="field">
+            <label>Birim Fiyat <span class="req">*</span></label>
+            <input type="number" id="birim-fiyat" placeholder="0.00" min="0" step="0.01">
+            <span class="err-msg">Geçerli bir fiyat giriniz.</span>
+          </div>
+          <div class="field">
+            <label>Para Birimi <span class="req">*</span></label>
+            <select id="para-birimi">
+              <option value="">— Seç —</option>
+              <option value="TRY">₺ TRY</option>
+              <option value="USD">$ USD</option>
+              <option value="EUR">€ EUR</option>
+            </select>
+            <span class="err-msg">Para birimi seçiniz.</span>
+          </div>
+        </div>
+        <div style="margin-top: 16px;">
+          <div class="price-preview">
+            <span class="label">TOPLAM TUTAR</span>
+            <span class="amount" id="toplam-gosterge">— —</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="form-footer">
+        <p class="hint">
+          Talep gönderildikten sonra yöneticinize otomatik bildirim e-postası iletilecektir.
+        </p>
+        <button type="submit" class="btn-submit" id="submit-btn">
+          <div class="spinner"></div>
+          <span class="btn-text">Talebi Gönder →</span>
+        </button>
+      </div>
+
+    </form>
+  </main>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <div class="toast-title">✓ Talep Gönderildi</div>
+    <p>Talebiniz yönetici onayına sunulmuştur. Onay durumunu Dashboard'dan takip edebilirsiniz.</p>
+  </div>
+
+  <script>
+    /* ── Config ── */
+    // Google Apps Script Web App URL'nizi buraya yapıştırın:
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbz9EpgfR15uESBCJMDaovg6KWJmFiw2p11kffWxKLwHxjuIClb9Y-J0bCGBV9lAv0u2/exec";
+    const ACCESS_PASSWORD = "sifre123"; // Giriş şifresini değiştirin
+
+    /* ── Login ── */
+    function checkLogin() {
+      const val = document.getElementById('login-input').value;
+      if (val === ACCESS_PASSWORD) {
+        document.getElementById('login-gate').style.display = 'none';
+        sessionStorage.setItem('auth', '1');
+      } else {
+        document.getElementById('login-error').style.display = 'block';
+      }
+    }
+    document.getElementById('login-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') checkLogin();
+    });
+    if (sessionStorage.getItem('auth') === '1') {
+      document.getElementById('login-gate').style.display = 'none';
+    }
+
+    /* ── Toplam Hesapla ── */
+    function updateTotal() {
+      const miktar = parseFloat(document.getElementById('miktar').value) || 0;
+      const fiyat = parseFloat(document.getElementById('birim-fiyat').value) || 0;
+      const birim = document.getElementById('para-birimi').value;
+      const toplam = miktar * fiyat;
+      const sym = birim === 'TRY' ? '₺' : birim === 'USD' ? '$' : birim === 'EUR' ? '€' : '';
+      document.getElementById('toplam-gosterge').textContent =
+        (toplam > 0 && birim) ? `${sym} ${toplam.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '— —';
+    }
+    ['miktar', 'birim-fiyat', 'para-birimi'].forEach(id =>
+      document.getElementById(id).addEventListener('input', updateTotal)
+    );
+
+    /* ── Validation ── */
+    function validate() {
+      const fields = [
+        { id: 'talep-eden', check: v => v.trim().length >= 2 },
+        { id: 'departman', check: v => v !== '' },
+        { id: 'urun-adi', check: v => v.trim().length >= 2 },
+        { id: 'miktar', check: v => parseFloat(v) > 0 },
+        { id: 'birim-fiyat', check: v => parseFloat(v) >= 0 },
+        { id: 'para-birimi', check: v => v !== '' },
+      ];
+      let ok = true;
+      fields.forEach(f => {
+        const el = document.getElementById(f.id);
+        if (!f.check(el.value)) { el.classList.add('error'); ok = false; }
+        else el.classList.remove('error');
+      });
+      return ok;
+    }
+
+    /* ── Submit ── */
+    document.getElementById('purchase-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!validate()) return;
+
+      const btn = document.getElementById('submit-btn');
+      btn.classList.add('loading');
+      btn.disabled = true;
+
+      const payload = {
+        talep_eden: document.getElementById('talep-eden').value.trim() +
+          ' / ' + document.getElementById('departman').value,
+        urun_adi: document.getElementById('urun-adi').value.trim(),
+        aciklama: document.getElementById('aciklama').value.trim(),
+        miktar: parseFloat(document.getElementById('miktar').value),
+        birim_fiyat: parseFloat(document.getElementById('birim-fiyat').value),
+        para_birimi: document.getElementById('para-birimi').value,
+      };
+
+      try {
+        await fetch(GAS_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        showToast();
+        document.getElementById('purchase-form').reset();
+        document.getElementById('toplam-gosterge').textContent = '— —';
+      } catch (err) {
+        alert('Gönderim sırasında bir hata oluştu. Lütfen tekrar deneyin.');
+      } finally {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }
+    });
+
+    function showToast() {
+      const t = document.getElementById('toast');
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 5000);
+    }
+  </script>
+</body>
+
+</html>
