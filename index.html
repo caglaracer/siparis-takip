@@ -2,449 +2,763 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tedarik ve Zimmet Yönetim Sistemi</title>
+  <meta name="description" content="Kurumsal satınalma, stok yönetimi ve demirbaş zimmet takip sistemi">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <?!= include('Styles') ?>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f0f4f8;--surface:#fff;--surface-2:#f8fafc;--surface-3:#f1f5f9;
+      --border:#e2e8f0;--border-h:#cbd5e1;
+      --primary:#2563eb;--primary-h:#1d4ed8;--primary-dim:rgba(37,99,235,.1);--primary-glow:rgba(37,99,235,.15);
+      --success:#059669;--success-dim:rgba(5,150,105,.1);
+      --warning:#d97706;--warning-dim:rgba(217,119,6,.1);
+      --danger:#dc2626;--danger-dim:rgba(220,38,38,.1);
+      --purple:#7c3aed;--purple-dim:rgba(124,58,237,.1);
+      --cyan:#0891b2;--cyan-dim:rgba(8,145,178,.1);
+      --text:#0f172a;--text-m:#475569;--text-d:#94a3b8;--text-w:#fff;
+      --f:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+      --mono:'Courier New',monospace;
+      --r:10px;--r-sm:6px;--r-lg:14px;--r-xl:20px;
+      --sh:0 4px 16px rgba(0,0,0,.06);--sh-lg:0 8px 32px rgba(0,0,0,.08);--sh-xl:0 16px 48px rgba(0,0,0,.12);
+      --ease:cubic-bezier(.4,0,.2,1);--bounce:cubic-bezier(.34,1.56,.64,1);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--f);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+    /* ═══ LOGIN ═══ */
+    .login-page{position:fixed;inset:0;background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);display:flex;align-items:center;justify-content:center;z-index:9999}
+    .login-page .bg-dots{position:absolute;inset:0;background-image:radial-gradient(rgba(96,165,250,.08) 1px,transparent 1px);background-size:32px 32px}
+    .login-box{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:48px 42px;width:400px;max-width:92vw;box-shadow:var(--sh-xl)}
+    .login-box .brand{display:flex;align-items:center;gap:10px;margin-bottom:6px;font-weight:800;font-size:1.05rem;letter-spacing:-.02em}
+    .login-box .brand .dot{width:8px;height:8px;background:var(--primary);border-radius:2px;transform:rotate(45deg)}
+    .login-box .brand .ver{background:var(--primary);color:var(--text-w);font-size:.55rem;font-weight:700;padding:2px 5px;border-radius:3px;margin-left:4px}
+    .login-box h2{font-size:1.4rem;font-weight:800;margin:20px 0 4px;letter-spacing:-.02em}
+    .login-box .sub{color:var(--text-m);font-size:.82rem;margin-bottom:28px}
+    .login-field{margin-bottom:16px}
+    .login-field label{display:block;font-size:.75rem;font-weight:500;color:var(--text-d);margin-bottom:6px}
+    .login-field input{width:100%;background:var(--surface-3);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:12px 16px;color:var(--text);font-family:var(--f);font-size:.9rem;outline:none;transition:border .2s,box-shadow .2s}
+    .login-field input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-dim)}
+    .login-btn{width:100%;background:var(--primary);color:var(--text-w);border:none;border-radius:var(--r-sm);padding:13px;font-family:var(--f);font-weight:700;font-size:.92rem;cursor:pointer;transition:background .2s,transform .1s;margin-top:8px}
+    .login-btn:hover{background:var(--primary-h)}.login-btn:active{transform:scale(.98)}
+    .login-err{color:var(--danger);font-size:.78rem;font-weight:500;text-align:center;margin-top:14px;min-height:20px}
+
+    /* ═══ HEADER ═══ */
+    .app-header{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:58px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+    .app-logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:.9rem}
+    .logo-dot{width:7px;height:7px;background:var(--primary);border-radius:2px;transform:rotate(45deg)}
+    .ver-badge{background:var(--primary);color:var(--text-w);font-size:.52rem;font-weight:700;padding:2px 5px;border-radius:3px}
+    .app-nav{display:flex;gap:2px}
+    .nav-btn{background:none;border:none;color:var(--text-m);font-family:var(--f);font-size:.78rem;font-weight:500;padding:7px 14px;border-radius:var(--r-sm);cursor:pointer;transition:all .15s}
+    .nav-btn:hover{color:var(--text);background:var(--surface-3)}
+    .nav-btn.active{color:var(--primary);background:var(--primary-dim)}
+    .user-chip{display:flex;align-items:center;gap:7px;background:var(--surface-3);border:1px solid var(--border);border-radius:22px;padding:3px 12px 3px 3px;font-size:.72rem;color:var(--text-m);font-weight:500}
+    .avatar{width:24px;height:24px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--text-w);font-size:.6rem;font-weight:700}
+    .r-tag{font-size:.55rem;font-weight:700;padding:2px 6px;border-radius:3px;text-transform:uppercase;letter-spacing:.04em}
+    .r-user{background:var(--surface-3);color:var(--text-d)}.r-manager{background:var(--warning-dim);color:var(--warning)}
+    .r-it{background:var(--cyan-dim);color:var(--cyan)}.r-procurement{background:var(--primary-dim);color:var(--primary)}
+    .r-director{background:var(--purple-dim);color:var(--purple)}
+    .logout-btn{background:none;border:1px solid var(--border);color:var(--text-d);border-radius:var(--r-sm);padding:5px 10px;font-family:var(--f);font-size:.68rem;cursor:pointer;margin-left:8px;transition:all .15s}
+    .logout-btn:hover{border-color:var(--danger);color:var(--danger)}
+
+    /* ═══ MAIN ═══ */
+    .app-main{max-width:1300px;margin:0 auto;padding:24px 24px 80px}
+    .view{display:none}.view.active{display:block;animation:fadeUp .25s var(--ease)}
+    .page-hdr{margin-bottom:22px}
+    .page-hdr .eye{font-size:.66rem;font-weight:600;color:var(--primary);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}
+    .page-hdr h1{font-size:1.5rem;font-weight:800;letter-spacing:-.03em}
+    .page-hdr .sub{color:var(--text-m);font-size:.82rem;margin-top:5px}
+
+    /* ═══ STATS ═══ */
+    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:11px;margin-bottom:22px}
+    .s-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;position:relative;overflow:hidden;transition:all .2s}
+    .s-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;border-radius:0 2px 2px 0}
+    .s-card.a-p::before{background:var(--primary)}.s-card.a-w::before{background:var(--warning)}.s-card.a-s::before{background:var(--success)}
+    .s-card.a-d::before{background:var(--danger)}.s-card.a-c::before{background:var(--cyan)}.s-card.a-v::before{background:var(--purple)}
+    .s-card:hover{box-shadow:var(--sh);transform:translateY(-1px)}
+    .s-lbl{font-size:.62rem;font-weight:600;color:var(--text-m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+    .s-val{font-size:1.5rem;font-weight:800;line-height:1}
+
+    /* ═══ TABS ═══ */
+    .tab-nav{display:flex;gap:3px;background:var(--surface);padding:4px;border-radius:var(--r);border:1px solid var(--border);margin-bottom:18px;flex-wrap:wrap}
+    .tab-btn{flex:1;min-width:100px;background:none;border:none;color:var(--text-m);font-family:var(--f);font-size:.74rem;font-weight:600;padding:8px 12px;border-radius:var(--r-sm);cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:4px}
+    .tab-btn:hover{color:var(--text);background:var(--surface-3)}
+    .tab-btn.active{color:var(--primary);background:var(--primary-dim)}
+    .tab-cnt{display:none}.tab-cnt.active{display:block;animation:fadeUp .2s var(--ease)}
+    .t-count{background:var(--danger);color:var(--text-w);font-size:.55rem;padding:1px 5px;border-radius:8px;font-weight:700;min-width:16px;text-align:center}
+
+    /* ═══ TABLE ═══ */
+    .t-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+    .t-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap}
+    .t-title{font-size:.88rem;font-weight:700}.t-meta{font-size:.66rem;color:var(--text-m)}
+    table{width:100%;border-collapse:collapse}
+    thead th{padding:8px 14px;text-align:left;font-size:.64rem;font-weight:600;color:var(--text-m);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);background:var(--surface-2);white-space:nowrap}
+    tbody tr{border-bottom:1px solid var(--border);transition:background .1s}tbody tr:last-child{border-bottom:none}
+    tbody tr:hover{background:var(--surface-2)}
+    tbody td{padding:9px 14px;font-size:.8rem;vertical-align:middle}
+    .mono{font-family:var(--mono);font-size:.72rem;color:var(--text-d)}.bold{font-weight:600}.r-align{text-align:right}.nw{white-space:nowrap}
+    .empty-r{text-align:center;padding:44px 20px;color:var(--text-m);font-size:.82rem}
+
+    /* ═══ BADGES ═══ */
+    .bg{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:.64rem;font-weight:600;white-space:nowrap}
+    .bg::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+    .bg-w{background:var(--warning-dim);color:var(--warning)}.bg-s{background:var(--success-dim);color:var(--success)}
+    .bg-d{background:var(--danger-dim);color:var(--danger)}.bg-i{background:var(--primary-dim);color:var(--primary)}
+    .bg-p{background:var(--purple-dim);color:var(--purple)}.bg-c{background:var(--cyan-dim);color:var(--cyan)}
+    .bg-n{background:var(--surface-3);color:var(--text-m)}
+
+    /* ═══ FILTER ═══ */
+    .fbar{display:flex;gap:4px;margin-bottom:12px;align-items:center;flex-wrap:wrap}
+    .fchip{background:var(--surface);border:1px solid var(--border);color:var(--text-m);border-radius:18px;padding:4px 11px;font-family:var(--f);font-size:.66rem;font-weight:500;cursor:pointer;transition:all .15s}
+    .fchip:hover{border-color:var(--primary);color:var(--primary)}.fchip.active{background:var(--primary);border-color:var(--primary);color:var(--text-w)}
+    .f-search{background:var(--surface-3);border:1px solid var(--border);border-radius:var(--r-sm);padding:6px 12px;color:var(--text);font-family:var(--f);font-size:.78rem;outline:none;width:180px;margin-left:auto}
+    .f-search:focus{border-color:var(--primary)}.f-search::placeholder{color:var(--text-d)}
+
+    /* ═══ TALEP CARDS ═══ */
+    .t-card{padding:14px 18px;border-bottom:1px solid var(--border)}.t-card:last-child{border-bottom:none}
+    .t-card:hover{background:var(--surface-2)}.t-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;flex-wrap:wrap}
+    .t-card-left{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+    .timeline{display:flex;align-items:flex-start;gap:0;padding:10px 2px 2px;overflow-x:auto}
+    .tl-step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;min-width:54px}
+    .tl-dot{width:22px;height:22px;border-radius:50%;background:var(--surface-3);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.55rem;font-weight:700;color:var(--text-d);z-index:2;transition:all .3s}
+    .tl-step.done .tl-dot{background:var(--success);border-color:var(--success);color:var(--text-w)}
+    .tl-step.now .tl-dot{background:var(--primary);border-color:var(--primary);color:var(--text-w);box-shadow:0 0 0 3px var(--primary-dim);animation:pulse 2s infinite}
+    .tl-step.fail .tl-dot{background:var(--danger);border-color:var(--danger);color:var(--text-w)}
+    .tl-lbl{font-size:.52rem;font-weight:500;color:var(--text-d);margin-top:3px;text-align:center}
+    .tl-step.done .tl-lbl,.tl-step.now .tl-lbl{color:var(--text);font-weight:600}
+    .tl-step::after{content:'';position:absolute;top:11px;left:50%;width:100%;height:2px;background:var(--border);z-index:1}
+    .tl-step:last-child::after{display:none}.tl-step.done::after{background:var(--success)}
+
+    /* ═══ FORMS ═══ */
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+    .fsec{padding:20px 22px;border-bottom:1px solid var(--border)}.fsec:last-child{border-bottom:none}
+    .sec-t{font-size:.66rem;font-weight:600;color:var(--text-m);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+    .sec-t::after{content:'';flex:1;height:1px;background:var(--border)}
+    .fg{display:grid;gap:12px}.fg2{grid-template-columns:1fr 1fr}.fg3{grid-template-columns:1fr 1fr 1fr}
+    .fld{display:flex;flex-direction:column;gap:4px}
+    .fld label{font-size:.72rem;font-weight:500;color:var(--text-d)}.fld .req{color:var(--danger);margin-left:2px}
+    .fld input,.fld select,.fld textarea{background:var(--surface-3);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-family:var(--f);font-size:.84rem;outline:none;transition:border .2s,box-shadow .2s;-webkit-appearance:none}
+    .fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-dim);background:var(--surface)}
+    .fld input.err{border-color:var(--danger)}.fld textarea{resize:vertical;min-height:68px;font-family:var(--f)}
+    .fld .e-msg{font-size:.66rem;color:var(--danger);font-weight:500;display:none}.fld input.err~.e-msg{display:block}
+    .f-foot{padding:16px 22px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+    .f-foot .hint{font-size:.72rem;color:var(--text-m);line-height:1.5;max-width:320px}
+
+    /* ═══ BUTTONS ═══ */
+    .btn-p{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:var(--f);font-weight:600;font-size:.8rem;padding:9px 18px;border-radius:var(--r-sm);border:none;cursor:pointer;transition:all .15s;white-space:nowrap;background:var(--primary);color:var(--text-w)}
+    .btn-p:hover{background:var(--primary-h)}.btn-p:active{transform:scale(.97)}.btn-p:disabled{opacity:.5;cursor:not-allowed}
+    .btn-o{background:var(--surface);color:var(--text-m);border:1px solid var(--border)}.btn-o:hover{border-color:var(--primary);color:var(--primary)}
+    .btn-sm{font-size:.68rem;padding:4px 10px}
+    .spinner{width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
+    .loading .spinner{display:inline-block}.loading .bl{display:none}
+    .act-btn{background:none;border:1px solid var(--border);color:var(--text-m);border-radius:4px;padding:3px 8px;font-family:var(--f);font-size:.64rem;font-weight:500;cursor:pointer;transition:all .12s;white-space:nowrap}
+    .act-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-dim)}
+    .act-btn.ok:hover{border-color:var(--success);color:var(--success);background:var(--success-dim)}
+    .act-btn.no:hover{border-color:var(--danger);color:var(--danger);background:var(--danger-dim)}
+
+    /* ═══ STOK BAR ═══ */
+    .sk-bar{background:var(--surface-3);border-radius:3px;height:5px;width:64px;margin:2px auto 0;overflow:hidden}
+    .sk-fill{height:100%;border-radius:3px}.sk-ok{background:var(--success)}.sk-wn{background:var(--warning)}.sk-cr{background:var(--danger)}
+
+    .stk-info{margin-top:10px;font-size:.78rem;padding:8px 12px;border-radius:var(--r-sm);display:inline-block}
+    .stk-ok{background:var(--success-dim);color:var(--success)}.stk-wn{background:var(--warning-dim);color:var(--warning)}
+
+    .price-card{background:linear-gradient(135deg,var(--primary-dim),rgba(37,99,235,.05));border:1px solid var(--primary-glow);border-radius:var(--r);padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+    .price-lbl{font-size:.66rem;font-weight:600;color:var(--text-m);text-transform:uppercase;letter-spacing:.06em}
+    .price-val{font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--primary)}
+    .kritik-warn{background:var(--danger-dim);border:1px solid rgba(220,38,38,.2);border-radius:var(--r-sm);padding:9px 12px;font-size:.78rem;color:var(--danger);font-weight:500;margin-top:12px;display:none}
+
+    /* ═══ MODAL ═══ */
+    .mdl{position:fixed;inset:0;background:rgba(15,23,42,.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:500;opacity:0;pointer-events:none;transition:opacity .2s}
+    .mdl.open{opacity:1;pointer-events:all}
+    .mdl-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:28px;width:460px;max-width:92vw;max-height:85vh;overflow-y:auto;transform:scale(.95) translateY(8px);transition:transform .2s var(--bounce);box-shadow:var(--sh-xl)}
+    .mdl.open .mdl-box{transform:scale(1) translateY(0)}
+    .mdl-box h3{font-size:1rem;font-weight:700;margin-bottom:5px}.mdl-box p{color:var(--text-m);font-size:.8rem;margin-bottom:16px}
+    .mdl-acts{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+    .mdl-no{background:var(--surface-3);border:1px solid var(--border);color:var(--text-d);border-radius:var(--r-sm);padding:8px 14px;font-family:var(--f);font-size:.8rem;cursor:pointer}
+    .mdl-ok{background:var(--primary);color:var(--text-w);border:none;border-radius:var(--r-sm);padding:8px 14px;font-family:var(--f);font-weight:700;font-size:.8rem;cursor:pointer}
+    .mdl-fld{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+    .mdl-fld label{font-size:.72rem;font-weight:500;color:var(--text-d)}
+    .mdl-fld input,.mdl-fld select{background:var(--surface-3);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;font-family:var(--f);font-size:.84rem;outline:none}
+    .mdl-fld input:focus,.mdl-fld select:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-dim)}
+
+    /* ═══ TOAST ═══ */
+    .toast{position:fixed;bottom:22px;right:22px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:13px 16px;max-width:340px;box-shadow:var(--sh-lg);transform:translateY(100px);opacity:0;transition:all .35s var(--bounce);z-index:600;display:flex;align-items:flex-start;gap:9px}
+    .toast.show{transform:translateY(0);opacity:1}
+    .toast.t-ok{border-left:3px solid var(--success)}.toast.t-err{border-left:3px solid var(--danger)}
+    .toast.t-warn{border-left:3px solid var(--warning)}.toast.t-info{border-left:3px solid var(--primary)}
+    .t-icon{font-size:1rem;flex-shrink:0}.t-body{flex:1}
+    .t-ttl{font-weight:700;font-size:.82rem;margin-bottom:1px}.t-msg{font-size:.72rem;color:var(--text-m);line-height:1.4}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes pulse{0%,100%{box-shadow:0 0 0 3px var(--primary-dim)}50%{box-shadow:0 0 0 6px rgba(37,99,235,.06)}}
+    @media(max-width:768px){.app-header{padding:0 14px}.app-main{padding:18px 14px 60px}.fg2,.fg3{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.f-foot{flex-direction:column}.tab-nav{flex-wrap:wrap}.fbar{flex-direction:column;align-items:stretch}.f-search{width:100%;margin-left:0}.tl-step::after{display:none}}
+    @media(max-width:480px){.stats{grid-template-columns:1fr}.app-nav{display:none}.page-hdr h1{font-size:1.2rem}}
+  </style>
 </head>
 <body>
 
-  <!-- ═══════════════════════════════════════════════════
-       SUNUCU TARAFINDA ENJEKSİYON — Kullanıcı bilgileri
-       Bu değişkenler Code.gs doGet() içinde set edilir.
-  ═══════════════════════════════════════════════════ -->
-  <script>
-    const CURRENT_USER = <?!= user ?>;
-    const USER_ROLE    = "<?= userRole ?>";
-    const USER_NAME    = "<?= userName ?>";
-    const USER_EMAIL   = "<?= userEmail ?>";
-  </script>
-
-  <!-- ═══════════════════════════════
-       HEADER
-  ═══════════════════════════════ -->
-  <header class="app-header">
-    <div class="app-logo">
-      <span class="logo-dot"></span>
-      Tedarik Sistemi
-      <span class="version-badge">v3.0</span>
+<!-- ═══════════════════════════════════════════════════════════
+     LOGIN PAGE
+═══════════════════════════════════════════════════════════ -->
+<div class="login-page" id="login-page">
+  <div class="bg-dots"></div>
+  <div class="login-box">
+    <div class="brand"><span class="dot"></span>Tedarik Sistemi<span class="ver">v4</span></div>
+    <h2>Sisteme Giriş</h2>
+    <p class="sub">Şirket e-posta adresiniz ve şifreniz ile giriş yapın.</p>
+    <div class="login-field">
+      <label>E-posta Adresi</label>
+      <input type="email" id="l-email" placeholder="ad.soyad@sirket.com.tr">
     </div>
-    <nav class="app-nav">
-      <!-- Rol bazlı sekme görünürlüğü sunucu tarafında kontrol edilir -->
-      <a href="#" class="active" onclick="switchMainView('dashboard'); return false;">Dashboard</a>
-      <a href="#" onclick="switchMainView('talep'); return false;">Yeni Talep</a>
-      <? if (userRole === "IT" || userRole === "Procurement" || userRole === "Director") { ?>
-        <a href="#" onclick="switchMainView('stok'); return false;">Stok</a>
-      <? } ?>
-      <? if (userRole === "Procurement" || userRole === "Director") { ?>
-        <a href="#" onclick="switchMainView('satinalmaForm'); return false;">Satınalma</a>
-      <? } ?>
-    </nav>
-    <div class="header-right">
+    <div class="login-field">
+      <label>Şifre</label>
+      <input type="password" id="l-pass" placeholder="••••••••">
+    </div>
+    <button class="login-btn" id="l-btn" onclick="doLogin()">
+      <span class="spinner" id="l-spin"></span>
+      <span id="l-txt">Giriş Yap</span>
+    </button>
+    <div class="login-err" id="l-err"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     APP SHELL (login sonrası görünür)
+═══════════════════════════════════════════════════════════ -->
+<div id="app" style="display:none;">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="app-logo"><span class="logo-dot"></span>Tedarik Sistemi<span class="ver-badge">v4</span></div>
+    <nav class="app-nav" id="main-nav"></nav>
+    <div style="display:flex;align-items:center;gap:6px;">
       <div class="user-chip">
-        <div class="avatar"><?= userName.charAt(0).toUpperCase() ?></div>
-        <span><?= userName ?></span>
-        <span class="role-tag role-<?= userRole.toLowerCase() ?>"><?= userRole ?></span>
+        <div class="avatar" id="u-avatar"></div>
+        <span id="u-name"></span>
+        <span class="r-tag" id="u-role"></span>
       </div>
+      <button class="logout-btn" onclick="doLogout()">Çıkış</button>
     </div>
   </header>
 
-  <!-- ═══════════════════════════════
-       ANA İÇERİK
-  ═══════════════════════════════ -->
-  <main class="app-main" id="app-main">
+  <main class="app-main" id="app-main"></main>
+</div>
 
-    <!-- ══════════════════════════════════
-         VIEW: DASHBOARD
-    ══════════════════════════════════ -->
-    <div class="view-panel active" id="view-dashboard">
-
-      <div class="page-header">
-        <div class="eyebrow">// <?= userName ?> — <?= userRole ?></div>
-        <h1>Dashboard</h1>
-        <p class="subtitle">Taleplerinizi takip edin ve onay işlemlerinizi yönetin.</p>
-      </div>
-
-      <!-- İstatistikler -->
-      <div class="stats-grid" id="stats-row">
-        <div class="stat-card accent-primary">
-          <div class="stat-label">Taleplerim</div>
-          <div class="stat-value" id="s-total">—</div>
-        </div>
-        <? if (userRole !== "User") { ?>
-        <div class="stat-card accent-warning">
-          <div class="stat-label">Onay Bekleyen</div>
-          <div class="stat-value" id="s-onay" style="color:var(--warning)">—</div>
-        </div>
-        <? } ?>
-        <? if (userRole === "Director" || userRole === "Procurement") { ?>
-        <div class="stat-card accent-info">
-          <div class="stat-label">Satınalma</div>
-          <div class="stat-value" id="s-satinalma" style="color:var(--primary)">—</div>
-        </div>
-        <? } ?>
-        <? if (userRole === "Director") { ?>
-        <div class="stat-card accent-danger">
-          <div class="stat-label">Reddedilen</div>
-          <div class="stat-value" id="s-red" style="color:var(--danger)">—</div>
-        </div>
-        <? } ?>
-      </div>
-
-      <!-- TAB SİSTEMİ — Rol bazlı tablar -->
-      <div class="tab-nav" id="dash-tabs">
-        <button class="tab-btn active" data-tab="taleplerim" onclick="switchTab(this)">📋 Taleplerim</button>
-        <!-- Onaycı rolleri için "Onay Bekleyenler" tabı — sunucu tarafında enjekte edilir -->
-        <? if (userRole === "Manager" || userRole === "IT" || userRole === "Procurement" || userRole === "Director") { ?>
-          <button class="tab-btn" data-tab="onayBekleyen" onclick="switchTab(this)">
-            ⏳ Onaylanacaklar <span class="tab-count" id="onay-count">0</span>
-          </button>
-          <button class="tab-btn" data-tab="gecmisOnay" onclick="switchTab(this)">📜 Geçmiş Onaylarım</button>
-        <? } ?>
-        <button class="tab-btn" data-tab="zimmet" onclick="switchTab(this)">📦 Zimmetlerim</button>
-        <? if (userRole === "Director") { ?>
-          <button class="tab-btn" data-tab="tumTalepler" onclick="switchTab(this)">🗂️ Tüm Talepler</button>
-        <? } ?>
-      </div>
-
-      <!-- TAB İÇERİKLERİ -->
-
-      <!-- TALEPLERİM -->
-      <div class="tab-content active" id="tab-taleplerim">
-        <div class="table-wrap">
-          <div class="table-toolbar">
-            <span class="table-title">Taleplerim</span>
-            <button class="btn btn-outline btn-sm" onclick="loadDashboard()">↻ Yenile</button>
-          </div>
-          <div id="taleplerim-body">
-            <div class="empty-row">⏳ Yükleniyor…</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ONAY BEKLEYENLER — Sadece onaycı roller görür (sunucu tarafında) -->
-      <? if (userRole === "Manager" || userRole === "IT" || userRole === "Procurement" || userRole === "Director") { ?>
-      <div class="tab-content" id="tab-onayBekleyen">
-        <div class="table-wrap">
-          <div class="table-toolbar">
-            <span class="table-title">Onaylanacak Talepler</span>
-            <span class="table-meta" id="onay-meta">—</span>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Tarih</th>
-                <th>Talep Eden</th>
-                <th>Departman</th>
-                <th>Ürün</th>
-                <th>Miktar</th>
-                <th>Süreç</th>
-                <th>Durum</th>
-                <!-- ONAY BUTONLARI — Sadece burada render edilir -->
-                <th style="text-align:right">İşlem</th>
-              </tr>
-            </thead>
-            <tbody id="onay-tbody">
-              <tr><td colspan="9" class="empty-row">⏳ Yükleniyor…</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- GEÇMİŞ ONAYLARIM -->
-      <div class="tab-content" id="tab-gecmisOnay">
-        <div class="table-wrap">
-          <div class="table-toolbar">
-            <span class="table-title">Geçmiş Onaylarım</span>
-            <span class="table-meta" id="gecmis-meta">—</span>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th><th>Tarih</th><th>Talep Eden</th><th>Ürün</th>
-                <th>Miktar</th><th>Süreç</th><th>Durum</th><th>Son İşlem</th>
-              </tr>
-            </thead>
-            <tbody id="gecmis-tbody">
-              <tr><td colspan="8" class="empty-row">⏳ Yükleniyor…</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <? } ?>
-
-      <!-- ZİMMETLERİM -->
-      <div class="tab-content" id="tab-zimmet">
-        <div class="table-wrap">
-          <div class="table-toolbar">
-            <span class="table-title">Zimmetlerim</span>
-            <? if (userRole === "IT" || userRole === "Director" || userRole === "Procurement") { ?>
-              <button class="btn btn-primary btn-sm" onclick="openZimmetModal()">+ Zimmet Oluştur</button>
-            <? } ?>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th><th>Ürün</th><th>Seri No</th>
-                <th>Teslim Tarihi</th><th>Teslim Eden</th><th>Durum</th>
-                <? if (userRole === "IT" || userRole === "Director" || userRole === "Procurement") { ?>
-                  <th style="text-align:right">İşlem</th>
-                <? } ?>
-              </tr>
-            </thead>
-            <tbody id="zimmet-tbody">
-              <tr><td colspan="7" class="empty-row">⏳ Yükleniyor…</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- TÜM TALEPLER — Sadece Director -->
-      <? if (userRole === "Director") { ?>
-      <div class="tab-content" id="tab-tumTalepler">
-        <div class="filter-bar">
-          <button class="filter-chip active" data-f="Tümü" onclick="setGlobalFilter(this)">Tümü</button>
-          <button class="filter-chip" data-f="Müdür Onayı Bekliyor" onclick="setGlobalFilter(this)">Müdür</button>
-          <button class="filter-chip" data-f="Teknik Onay Bekliyor" onclick="setGlobalFilter(this)">Teknik</button>
-          <button class="filter-chip" data-f="Satınalma" onclick="setGlobalFilter(this)">Satınalma</button>
-          <button class="filter-chip" data-f="Sipariş" onclick="setGlobalFilter(this)">Sipariş</button>
-          <button class="filter-chip" data-f="Teslim" onclick="setGlobalFilter(this)">Teslim</button>
-          <button class="filter-chip" data-f="Reddedildi" onclick="setGlobalFilter(this)">Red</button>
-          <input type="text" class="search-input" placeholder="🔍 Ara…" id="global-search" oninput="renderGlobalTable()">
-        </div>
-        <div class="table-wrap">
-          <div class="table-toolbar">
-            <span class="table-title">Tüm Talepler</span>
-            <span class="table-meta" id="global-meta">—</span>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th><th>Tarih</th><th>Talep Eden</th><th>Departman</th>
-                <th>Ürün</th><th>Miktar</th><th>Süreç</th><th>Durum</th><th style="text-align:right">İşlem</th>
-              </tr>
-            </thead>
-            <tbody id="global-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-      <? } ?>
-    </div>
-
-    <!-- ══════════════════════════════════
-         VIEW: YENİ TALEP FORMU
-    ══════════════════════════════════ -->
-    <div class="view-panel" id="view-talep">
-      <div class="page-header">
-        <div class="eyebrow">// Yeni Talep</div>
-        <h1>Satınalma Talebi Oluştur</h1>
-        <p class="subtitle">Talebiniz otomatik olarak departman müdürünüzün onayına gönderilir.</p>
-      </div>
-
-      <form class="card" id="talep-form" novalidate>
-        <div class="form-section">
-          <div class="section-title">Talep Eden</div>
-          <div class="form-grid cols-2">
-            <div class="field">
-              <label>Ad Soyad</label>
-              <input type="text" value="<?= userName ?>" readonly style="background:var(--surface-2);color:var(--text-muted);">
-            </div>
-            <div class="field">
-              <label>Departman</label>
-              <input type="text" value="<?= CURRENT_USER ? JSON.parse(user).departman : '' ?>" readonly style="background:var(--surface-2);color:var(--text-muted);">
-            </div>
-          </div>
-        </div>
-
-        <div class="form-section">
-          <div class="section-title">Ürün / Hizmet Bilgisi</div>
-          <div class="form-grid cols-2">
-            <div class="field">
-              <label>Stoktan Seç</label>
-              <select id="f-urun-stok" onchange="onStokSelect()">
-                <option value="">— Stoktan ürün seçin —</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>veya Manuel Girin <span class="req">*</span></label>
-              <input type="text" id="f-urun-adi" placeholder="Örn: Laptop, Yazılım Lisansı…">
-              <span class="err-msg">Ürün adı zorunludur.</span>
-            </div>
-          </div>
-          <div class="stok-bilgi" id="stok-bilgi"></div>
-          <div class="field" style="margin-top:16px;">
-            <label>Açıklama / Teknik Notlar</label>
-            <textarea id="f-aciklama" placeholder="Teknik özellikler, marka tercihi…"></textarea>
-          </div>
-        </div>
-
-        <div class="form-section">
-          <div class="section-title">Miktar</div>
-          <div class="form-grid cols-3">
-            <div class="field">
-              <label>Adet <span class="req">*</span></label>
-              <input type="number" id="f-miktar" value="1" min="1" step="1">
-              <span class="err-msg">Geçerli miktar giriniz.</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-footer">
-          <p class="hint">Talebiniz müdürünüze e-posta ile iletilecektir. Süreç, stok durumuna göre otomatik yönlendirilir.</p>
-          <button type="submit" class="btn btn-primary" id="talep-submit">
-            <div class="spinner"></div>
-            <span class="btn-label">Talebi Gönder →</span>
-          </button>
-        </div>
-      </form>
-    </div>
-
-    <!-- ══════════════════════════════════
-         VIEW: STOK — IT, Procurement, Director
-    ══════════════════════════════════ -->
-    <? if (userRole === "IT" || userRole === "Procurement" || userRole === "Director") { ?>
-    <div class="view-panel" id="view-stok">
-      <div class="page-header">
-        <div class="eyebrow">// Envanter</div>
-        <h1>Stok Durumu</h1>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Ürün ID</th><th>Ürün Adı</th><th>Kategori</th>
-              <th style="text-align:center">Mevcut</th><th style="text-align:center">Kritik</th>
-              <th>Birim</th><th>Durum</th>
-            </tr>
-          </thead>
-          <tbody id="stok-tbody">
-            <tr><td colspan="7" class="empty-row">⏳ Yükleniyor…</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <? } ?>
-
-    <!-- ══════════════════════════════════
-         VIEW: SATINALMA FORMU — Procurement, Director
-    ══════════════════════════════════ -->
-    <? if (userRole === "Procurement" || userRole === "Director") { ?>
-    <div class="view-panel" id="view-satinalmaForm">
-      <div class="page-header">
-        <div class="eyebrow">// Satınalma Birimi</div>
-        <h1>Satınalma Kaydı Oluştur</h1>
-      </div>
-      <form class="card" id="sat-form" novalidate>
-        <div class="form-section">
-          <div class="section-title">Talep Seçimi</div>
-          <div class="form-grid cols-2">
-            <div class="field">
-              <label>Talep <span class="req">*</span></label>
-              <select id="s-talep-id"><option value="">— Bekleyen talepler —</option></select>
-            </div>
-            <div class="field">
-              <label>Ürün</label>
-              <input type="text" id="s-urun-adi" readonly>
-            </div>
-          </div>
-        </div>
-        <div class="form-section">
-          <div class="section-title">Tedarik Detayları</div>
-          <div class="form-grid cols-2">
-            <div class="field">
-              <label>Firma <span class="req">*</span></label>
-              <input type="text" id="s-firma" placeholder="Tedarikçi firma">
-            </div>
-            <div class="field">
-              <label>Birim Fiyat <span class="req">*</span></label>
-              <input type="number" id="s-fiyat" placeholder="0.00" min="0" step="0.01">
-            </div>
-          </div>
-          <div class="form-grid cols-3" style="margin-top:16px;">
-            <div class="field">
-              <label>Döviz <span class="req">*</span></label>
-              <select id="s-doviz"><option value="">— Seç —</option><option value="TRY">₺ TRY</option><option value="USD">$ USD</option><option value="EUR">€ EUR</option></select>
-            </div>
-            <div class="field">
-              <label>Ödeme Tipi</label>
-              <select id="s-odeme"><option value="">— Seç —</option><option>Nakit</option><option>Çek</option><option>EFT / Havale</option><option>Kredi Kartı</option></select>
-            </div>
-            <div class="field">
-              <label>Vade</label>
-              <input type="text" id="s-vade" placeholder="30 gün">
-            </div>
-          </div>
-          <div class="form-grid cols-2" style="margin-top:16px;">
-            <div class="field">
-              <label>Bütçe Kodu</label>
-              <input type="text" id="s-butce" placeholder="BTC-2024-IT">
-            </div>
-            <div class="field"><label>&nbsp;</label>
-              <div class="price-card" id="s-toplam-card" style="display:none;">
-                <span class="price-label">TOPLAM</span>
-                <span class="price-amount" id="s-toplam">—</span>
-              </div>
-            </div>
-          </div>
-          <div class="kritik-uyari" id="s-kritik" style="display:none;">🚨 KRİTİK ALIM: 100.000 TL üzeri — Direktör onayı gerekecek.</div>
-        </div>
-        <div class="form-footer">
-          <p class="hint">100K TL üzeri alımlar otomatik olarak Direktör onayına gönderilir.</p>
-          <button type="submit" class="btn btn-primary" id="sat-submit">
-            <div class="spinner"></div>
-            <span class="btn-label">Kayıt Oluştur →</span>
-          </button>
-        </div>
-      </form>
-    </div>
-    <? } ?>
-
-  </main>
-
-  <!-- ZİMMET MODAL — Sadece yetkili roller -->
-  <? if (userRole === "IT" || userRole === "Procurement" || userRole === "Director") { ?>
-  <div class="modal-overlay" id="zimmet-modal">
-    <div class="modal-box">
-      <h3>📦 Yeni Zimmet</h3>
-      <p>Demirbaş zimmet kaydı oluşturun.</p>
-      <div class="modal-field"><label>Personel</label><select id="zm-personel"></select></div>
-      <div class="modal-field"><label>Ürün</label><select id="zm-urun"></select></div>
-      <div class="modal-field"><label>Seri / Barkod No</label><input type="text" id="zm-seri" placeholder="SN-2024-00123"></div>
-      <div class="modal-field"><label>Talep ID (opsiyonel)</label><input type="text" id="zm-talep" placeholder="TLP-00001"></div>
-      <div class="modal-actions">
-        <button class="modal-cancel" onclick="closeZimmetModal()">İptal</button>
-        <button class="modal-confirm" onclick="submitZimmet()">Oluştur</button>
-      </div>
+<!-- CONFIRM MODAL -->
+<div class="mdl" id="c-mdl">
+  <div class="mdl-box">
+    <h3 id="cm-t">Onay</h3>
+    <p id="cm-b">Bu işlemi gerçekleştirmek istiyor musunuz?</p>
+    <div class="mdl-acts">
+      <button class="mdl-no" onclick="closeMdl('c-mdl')">İptal</button>
+      <button class="mdl-ok" id="cm-ok">Onayla</button>
     </div>
   </div>
-  <? } ?>
+</div>
 
-  <!-- ONAY MODAL -->
-  <div class="modal-overlay" id="confirm-modal">
-    <div class="modal-box">
-      <h3 id="cm-title">İşlem Onayı</h3>
-      <p id="cm-body">Bu işlemi gerçekleştirmek istiyor musunuz?</p>
-      <div class="modal-actions">
-        <button class="modal-cancel" onclick="closeConfirmModal()">İptal</button>
-        <button class="modal-confirm" id="cm-ok">Onayla</button>
-      </div>
+<!-- ZIMMET MODAL -->
+<div class="mdl" id="z-mdl">
+  <div class="mdl-box">
+    <h3>📦 Yeni Zimmet</h3>
+    <p>Demirbaş zimmet kaydı oluşturun.</p>
+    <div class="mdl-fld"><label>Personel</label><select id="zm-p"></select></div>
+    <div class="mdl-fld"><label>Ürün</label><select id="zm-u"></select></div>
+    <div class="mdl-fld"><label>Seri No</label><input type="text" id="zm-s" placeholder="SN-2024-00001"></div>
+    <div class="mdl-fld"><label>Talep ID (opsiyonel)</label><input type="text" id="zm-t" placeholder="TLP-00001"></div>
+    <div class="mdl-acts">
+      <button class="mdl-no" onclick="closeMdl('z-mdl')">İptal</button>
+      <button class="mdl-ok" onclick="submitZimmet()">Oluştur</button>
     </div>
   </div>
+</div>
 
-  <!-- TOAST -->
-  <div class="toast-box" id="toast">
-    <span class="toast-icon" id="t-icon">✅</span>
-    <div class="toast-body">
-      <div class="toast-title" id="t-title">Başarılı</div>
-      <p class="toast-msg" id="t-msg">İşlem tamamlandı.</p>
-    </div>
-  </div>
+<!-- TOAST -->
+<div class="toast" id="toast"><span class="t-icon" id="ti">✅</span><div class="t-body"><div class="t-ttl" id="tt"></div><p class="t-msg" id="tm"></p></div></div>
 
-  <!-- ═══════════════════════════════════════════════════
-       CLIENT-SIDE JAVASCRIPT
-  ═══════════════════════════════════════════════════ -->
-  <?!= include('JavaScript') ?>
+<!-- ═══════════════════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════════════════ -->
+<script>
+// ═══ CONFIG ═══
+var GAS = "https://script.google.com/macros/s/AKfycbz9EpgfR15uESBCJMDaovg6KWJmFiw2p11kffWxKLwHxjuIClb9Y-J0bCGBV9lAv0u2/exec";
 
+// ═══ STATE ═══
+var D = null; // dashboard data
+var USER = null;
+var gFilter = "Tümü";
+
+// ═══ LOGIN ═══
+function doLogin() {
+  var email = document.getElementById("l-email").value.trim();
+  var pass = document.getElementById("l-pass").value.trim();
+  if (!email || !pass) { showErr("E-posta ve şifre giriniz."); return; }
+  document.getElementById("l-btn").classList.add("loading");
+  showErr("");
+  apiGet("login", { email: email, sifre: pass }).then(function(r) {
+    document.getElementById("l-btn").classList.remove("loading");
+    if (r.success) {
+      USER = r.user;
+      sessionStorage.setItem("user", JSON.stringify(USER));
+      enterApp();
+    } else { showErr(r.error || "Giriş başarısız."); }
+  }).catch(function() {
+    document.getElementById("l-btn").classList.remove("loading");
+    showErr("Bağlantı hatası.");
+  });
+}
+
+function showErr(m) { document.getElementById("l-err").textContent = m; }
+
+document.getElementById("l-pass").addEventListener("keydown", function(e) { if (e.key === "Enter") doLogin(); });
+
+// ═══ SESSION KONTROL ═══
+(function() {
+  var s = sessionStorage.getItem("user");
+  if (s) { try { USER = JSON.parse(s); enterApp(); } catch(e) {} }
+})();
+
+function doLogout() {
+  sessionStorage.removeItem("user");
+  USER = null;
+  location.reload();
+}
+
+// ═══ APP GİRİŞ ═══
+function enterApp() {
+  document.getElementById("login-page").style.display = "none";
+  document.getElementById("app").style.display = "block";
+  document.getElementById("u-avatar").textContent = USER.isim.charAt(0).toUpperCase();
+  document.getElementById("u-name").textContent = USER.isim;
+  var rtag = document.getElementById("u-role");
+  rtag.textContent = USER.rol;
+  rtag.className = "r-tag r-" + USER.rol.toLowerCase();
+  buildNav();
+  buildViews();
+  loadDash();
+}
+
+// ═══ NAV ═══
+function buildNav() {
+  var nav = document.getElementById("main-nav");
+  var items = [{ id:"dashboard", label:"Dashboard", roles:["User","Manager","IT","Procurement","Director"] },
+    { id:"talep", label:"Yeni Talep", roles:["User","Manager","IT","Procurement","Director"] },
+    { id:"stok", label:"Stok", roles:["IT","Procurement","Director"] },
+    { id:"satForm", label:"Satınalma", roles:["Procurement","Director"] }];
+  nav.innerHTML = "";
+  items.forEach(function(it) {
+    if (it.roles.indexOf(USER.rol) < 0) return;
+    var b = document.createElement("button");
+    b.className = "nav-btn" + (it.id === "dashboard" ? " active" : "");
+    b.textContent = it.label;
+    b.dataset.view = it.id;
+    b.onclick = function() { switchView(it.id, b); };
+    nav.appendChild(b);
+  });
+}
+
+function switchView(id, btn) {
+  document.querySelectorAll(".view").forEach(function(v){ v.classList.remove("active"); });
+  document.querySelectorAll(".nav-btn").forEach(function(b){ b.classList.remove("active"); });
+  var el = document.getElementById("v-" + id);
+  if (el) el.classList.add("active");
+  if (btn) btn.classList.add("active");
+  if (id === "satForm") loadSatBekleyen();
+}
+
+// ═══ VİEW İNŞA ═══
+function buildViews() {
+  var main = document.getElementById("app-main");
+  main.innerHTML = "";
+  main.appendChild(buildDashboard());
+  main.appendChild(buildTalepForm());
+  if (["IT","Procurement","Director"].indexOf(USER.rol) >= 0) main.appendChild(buildStokView());
+  if (["Procurement","Director"].indexOf(USER.rol) >= 0) main.appendChild(buildSatForm());
+}
+
+// ═══ DASHBOARD VIEW ═══
+function buildDashboard() {
+  var v = el("div", "view active", "v-dashboard");
+  var hdr = '<div class="page-hdr"><div class="eye">// ' + USER.isim + ' — ' + USER.rol + '</div><h1>Dashboard</h1></div>';
+  var statsHtml = '<div class="stats" id="stats-row"></div>';
+  var tabs = '<div class="tab-nav" id="d-tabs"></div><div id="d-tab-body"></div>';
+  v.innerHTML = hdr + statsHtml + tabs;
+  return v;
+}
+
+function buildDashTabs() {
+  var nav = document.getElementById("d-tabs");
+  var body = document.getElementById("d-tab-body");
+  if (!nav || !body) return;
+  var tabs = [];
+  tabs.push({ id:"taleplerim", label:"📋 Taleplerim" });
+  if (USER.rol !== "User") tabs.push({ id:"onayBekleyen", label:"⏳ Onaylanacaklar", count: true });
+  if (USER.rol !== "User") tabs.push({ id:"gecmis", label:"📜 Geçmiş İşlemler" });
+  tabs.push({ id:"zimmet", label:"📦 Zimmetlerim" });
+  if (USER.rol === "Director") tabs.push({ id:"tumTalepler", label:"🗂️ Tüm Talepler" });
+
+  nav.innerHTML = "";
+  tabs.forEach(function(t, i) {
+    var b = document.createElement("button");
+    b.className = "tab-btn" + (i === 0 ? " active" : "");
+    b.dataset.tab = t.id;
+    b.innerHTML = t.label + (t.count ? ' <span class="t-count" id="onay-cnt">0</span>' : '');
+    b.onclick = function() { switchTab(b); };
+    nav.appendChild(b);
+  });
+
+  body.innerHTML = "";
+  tabs.forEach(function(t, i) {
+    var d = el("div", "tab-cnt" + (i === 0 ? " active" : ""), "tc-" + t.id);
+    body.appendChild(d);
+  });
+}
+
+function switchTab(btn) {
+  btn.parentElement.querySelectorAll(".tab-btn").forEach(function(b){ b.classList.remove("active"); });
+  btn.classList.add("active");
+  var body = document.getElementById("d-tab-body");
+  body.querySelectorAll(".tab-cnt").forEach(function(c){ c.classList.remove("active"); });
+  var tc = document.getElementById("tc-" + btn.dataset.tab);
+  if (tc) tc.classList.add("active");
+}
+
+// ═══ TALEP FORM VIEW ═══
+function buildTalepForm() {
+  var v = el("div", "view", "v-talep");
+  v.innerHTML = '<div class="page-hdr"><div class="eye">// Yeni Talep</div><h1>Satınalma Talebi Oluştur</h1><p class="sub">Talebiniz departman müdürünüze e-posta ile iletilir.</p></div>' +
+  '<form class="card" id="talep-form" novalidate>' +
+    '<div class="fsec"><div class="sec-t">Talep Eden</div><div class="fg fg2">' +
+      '<div class="fld"><label>Ad Soyad</label><input type="text" value="' + USER.isim + '" readonly style="background:var(--surface-2);color:var(--text-m)"></div>' +
+      '<div class="fld"><label>Departman</label><input type="text" value="' + USER.departman + '" readonly style="background:var(--surface-2);color:var(--text-m)"></div>' +
+    '</div></div>' +
+    '<div class="fsec"><div class="sec-t">Ürün Bilgisi</div><div class="fg fg2">' +
+      '<div class="fld"><label>Stoktan Seç</label><select id="f-stok" onchange="onStokSel()"><option value="">— Stoktan seçin —</option></select></div>' +
+      '<div class="fld"><label>veya Manuel Girin <span class="req">*</span></label><input type="text" id="f-urun" placeholder="Laptop, Yazılım Lisansı…"><span class="e-msg">Ürün adı zorunlu.</span></div>' +
+    '</div><div id="stk-info"></div>' +
+    '<div class="fld" style="margin-top:12px"><label>Açıklama</label><textarea id="f-not" placeholder="Teknik detaylar, marka tercihi…"></textarea></div></div>' +
+    '<div class="fsec"><div class="sec-t">Miktar</div><div class="fg fg3"><div class="fld"><label>Adet <span class="req">*</span></label><input type="number" id="f-mkt" value="1" min="1"></div></div></div>' +
+    '<div class="f-foot"><p class="hint">Talebiniz müdürünüze e-posta ile iletilir. Stok durumuna göre süreç otomatik yönlendirilir.</p>' +
+    '<button type="submit" class="btn-p" id="t-sub"><span class="spinner"></span><span class="bl">Talebi Gönder →</span></button></div>' +
+  '</form>';
+  return v;
+}
+
+// ═══ STOK VIEW ═══
+function buildStokView() {
+  var v = el("div", "view", "v-stok");
+  v.innerHTML = '<div class="page-hdr"><div class="eye">// Envanter</div><h1>Stok Durumu</h1></div>' +
+    '<div class="t-wrap"><table><thead><tr><th>Ürün ID</th><th>Ürün Adı</th><th>Kategori</th><th style="text-align:center">Mevcut</th><th style="text-align:center">Kritik</th><th>Birim</th><th>Durum</th></tr></thead><tbody id="stk-tbody"><tr><td colspan="7" class="empty-r">⏳</td></tr></tbody></table></div>';
+  return v;
+}
+
+// ═══ SATINALMA FORM VIEW ═══
+function buildSatForm() {
+  var v = el("div", "view", "v-satForm");
+  v.innerHTML = '<div class="page-hdr"><div class="eye">// Satınalma</div><h1>Satınalma Kaydı Oluştur</h1></div>' +
+  '<form class="card" id="sat-form" novalidate>' +
+    '<div class="fsec"><div class="sec-t">Talep</div><div class="fg fg2">' +
+      '<div class="fld"><label>Talep <span class="req">*</span></label><select id="sf-tid"><option value="">— Bekleyen talepler —</option></select></div>' +
+      '<div class="fld"><label>Ürün</label><input type="text" id="sf-uadi" readonly></div>' +
+    '</div></div>' +
+    '<div class="fsec"><div class="sec-t">Tedarik Detayları</div><div class="fg fg2">' +
+      '<div class="fld"><label>Firma <span class="req">*</span></label><input type="text" id="sf-firma" placeholder="Tedarikçi"></div>' +
+      '<div class="fld"><label>Birim Fiyat <span class="req">*</span></label><input type="number" id="sf-fiyat" min="0" step="0.01"></div>' +
+    '</div><div class="fg fg3" style="margin-top:12px">' +
+      '<div class="fld"><label>Döviz <span class="req">*</span></label><select id="sf-dvz"><option value="">— Seç —</option><option value="TRY">₺ TRY</option><option value="USD">$ USD</option><option value="EUR">€ EUR</option></select></div>' +
+      '<div class="fld"><label>Ödeme</label><select id="sf-odm"><option value="">— Seç —</option><option>Nakit</option><option>Çek</option><option>EFT / Havale</option><option>Kredi Kartı</option></select></div>' +
+      '<div class="fld"><label>Vade</label><input type="text" id="sf-vade" placeholder="30 gün"></div>' +
+    '</div><div class="fg fg2" style="margin-top:12px">' +
+      '<div class="fld"><label>Bütçe Kodu</label><input type="text" id="sf-btc" placeholder="BTC-2024-IT"></div>' +
+      '<div class="fld"><label>&nbsp;</label><div class="price-card" id="sf-top" style="display:none"><span class="price-lbl">TOPLAM</span><span class="price-val" id="sf-topv">—</span></div></div>' +
+    '</div><div class="kritik-warn" id="sf-krit">🚨 KRİTİK ALIM: 100.000 TL üzeri — Direktör onayı gerekecek.</div></div>' +
+    '<div class="f-foot"><p class="hint">100K TL üzeri alımlar Direktör onayına gönderilir.</p><button type="submit" class="btn-p" id="sf-sub"><span class="spinner"></span><span class="bl">Kayıt Oluştur →</span></button></div>' +
+  '</form>';
+  return v;
+}
+
+// ═══ API ═══
+function apiGet(action, params) {
+  var url = GAS + "?action=" + encodeURIComponent(action);
+  if (params) Object.keys(params).forEach(function(k){ url += "&" + k + "=" + encodeURIComponent(params[k]); });
+  return fetch(url).then(function(r){ return r.json(); });
+}
+
+function apiPost(payload) {
+  return fetch(GAS, { method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(payload) })
+    .then(function(r) { try { return r.json(); } catch(e) { return { success: true }; } })
+    .catch(function() { return { success: true }; }); // no-cors fallback
+}
+
+// ═══ DASHBOARD VERİ YÜKLE ═══
+function loadDash() {
+  buildDashTabs();
+  apiGet("getDashboard", { email: USER.email }).then(function(r) {
+    if (!r.success) { toast("err", "Hata", r.error); return; }
+    D = r;
+    renderStats();
+    renderTaleplerim();
+    renderOnayBekleyen();
+    renderGecmis();
+    renderZimmet();
+    renderStok();
+    renderTumTalepler();
+    loadStokDropdown();
+  }).catch(function(e) { toast("err", "Bağlantı Hatası", "API'ye ulaşılamıyor."); });
+}
+
+// ═══ STATS ═══
+function renderStats() {
+  if (!D) return;
+  var s = D.stats;
+  var html = '<div class="s-card a-p"><div class="s-lbl">Taleplerim</div><div class="s-val">' + (s.toplam||0) + '</div></div>';
+  if (USER.rol !== "User") html += '<div class="s-card a-w"><div class="s-lbl">Onay Bekleyen</div><div class="s-val" style="color:var(--warning)">' + (s.onayBekleyen||0) + '</div></div>';
+  if (USER.rol === "Director" || USER.rol === "Procurement") html += '<div class="s-card a-c"><div class="s-lbl">Satınalma</div><div class="s-val" style="color:var(--cyan)">' + (s.satinalma||0) + '</div></div>';
+  html += '<div class="s-card a-s"><div class="s-lbl">Teslim</div><div class="s-val" style="color:var(--success)">' + (s.teslim||0) + '</div></div>';
+  if (USER.rol === "Director") html += '<div class="s-card a-d"><div class="s-lbl">Reddedilen</div><div class="s-val" style="color:var(--danger)">' + (s.red||0) + '</div></div>';
+  document.getElementById("stats-row").innerHTML = html;
+  var cnt = document.getElementById("onay-cnt"); if (cnt) cnt.textContent = s.onayBekleyen || 0;
+}
+
+// ═══ TALEPLERİM ═══
+function renderTaleplerim() {
+  var c = document.getElementById("tc-taleplerim"); if (!c || !D) return;
+  var rows = D.taleplerim || [];
+  if (!rows.length) { c.innerHTML = '<div class="t-wrap"><div class="empty-r">📋 Henüz talebiniz yok.</div></div>'; return; }
+  var html = '<div class="t-wrap"><div class="t-bar"><span class="t-title">Taleplerim</span><button class="btn-p btn-sm btn-o" onclick="loadDash()">↻ Yenile</button></div>';
+  rows.forEach(function(t) {
+    html += '<div class="t-card"><div class="t-card-top"><div class="t-card-left"><span class="mono">' + t.talepId + '</span> ' + badge(t.durum) + (t.surecTipi ? ' <span class="bg bg-n">' + t.surecTipi + '</span>' : '') + '</div><span class="mono">' + (t.tarih||'') + '</span></div>';
+    html += '<div style="font-size:.84rem"><strong>' + (t.urunAdi||t.urunId||'—') + '</strong> <span style="color:var(--text-m);font-size:.78rem">&middot; ' + (t.miktar||'') + ' adet</span></div>';
+    if (t.teknikNot) html += '<div style="font-size:.72rem;color:var(--text-d);font-style:italic;margin-top:2px">"' + t.teknikNot + '"</div>';
+    html += '<div class="timeline">' + timeline(t.durum, t.surecTipi) + '</div></div>';
+  });
+  c.innerHTML = html + '</div>';
+}
+
+// ═══ ONAY BEKLEYENLER ═══
+function renderOnayBekleyen() {
+  var c = document.getElementById("tc-onayBekleyen"); if (!c || !D) return;
+  var rows = D.onayBekleyenler || [];
+  if (!rows.length) { c.innerHTML = '<div class="t-wrap"><div class="empty-r">✅ Onay bekleyen talep yok.</div></div>'; return; }
+  var html = '<div class="t-wrap"><div class="t-bar"><span class="t-title">Onaylanacak Talepler</span><span class="t-meta">' + rows.length + ' talep</span></div><table><thead><tr><th>ID</th><th>Tarih</th><th>Talep Eden</th><th>Dep.</th><th>Ürün</th><th>Miktar</th><th>Durum</th><th class="r-align">İşlem</th></tr></thead><tbody>';
+  rows.forEach(function(r) {
+    html += '<tr><td class="mono">' + r.talepId + '</td><td class="mono nw">' + (r.tarih||'') + '</td><td>' + (r.talepEdenIsim||r.talepEdenEmail||'') + '</td><td class="mono" style="font-size:.7rem">' + (r.departman||'') + '</td><td class="bold">' + (r.urunAdi||'—') + '</td><td style="text-align:center">' + (r.miktar||'') + '</td><td>' + badge(r.durum) + '</td><td class="r-align nw"><button class="act-btn ok" onclick="doApprove(\'' + r.talepId + '\')">✓ Onayla</button> <button class="act-btn no" onclick="doReject(\'' + r.talepId + '\')">✕ Ret</button></td></tr>';
+  });
+  c.innerHTML = html + '</tbody></table></div>';
+}
+
+// ═══ GEÇMİŞ ═══
+function renderGecmis() {
+  var c = document.getElementById("tc-gecmis"); if (!c || !D) return;
+  var rows = D.gecmisIslemler || [];
+  if (!rows.length) { c.innerHTML = '<div class="t-wrap"><div class="empty-r">📜 Geçmiş kayıt yok.</div></div>'; return; }
+  var html = '<div class="t-wrap"><div class="t-bar"><span class="t-title">Geçmiş İşlemler</span><span class="t-meta">' + rows.length + '</span></div><table><thead><tr><th>ID</th><th>Tarih</th><th>Talep Eden</th><th>Ürün</th><th>Miktar</th><th>Durum</th><th>Son İşlem</th></tr></thead><tbody>';
+  rows.forEach(function(r) {
+    html += '<tr><td class="mono">' + r.talepId + '</td><td class="mono nw">' + (r.tarih||'') + '</td><td>' + (r.talepEdenIsim||'') + '</td><td class="bold">' + (r.urunAdi||'—') + '</td><td style="text-align:center">' + (r.miktar||'') + '</td><td>' + badge(r.durum) + '</td><td class="mono" style="font-size:.68rem">' + (r.sonIslemTarihi||'') + '</td></tr>';
+  });
+  c.innerHTML = html + '</tbody></table></div>';
+}
+
+// ═══ ZİMMET ═══
+function renderZimmet() {
+  var c = document.getElementById("tc-zimmet"); if (!c || !D) return;
+  var rows = D.zimmetlerim || [];
+  var canManage = ["IT","Procurement","Director"].indexOf(USER.rol) >= 0;
+  var html = '<div class="t-wrap"><div class="t-bar"><span class="t-title">Zimmetlerim</span>' + (canManage ? '<button class="btn-p btn-sm" onclick="openZimmetMdl()">+ Zimmet</button>' : '') + '</div>';
+  if (!rows.length) { c.innerHTML = html + '<div class="empty-r">📦 Zimmet kaydı yok.</div></div>'; return; }
+  html += '<table><thead><tr><th>ID</th><th>Ürün</th><th>Seri No</th><th>Teslim</th><th>Durum</th>' + (canManage ? '<th class="r-align">İşlem</th>' : '') + '</tr></thead><tbody>';
+  rows.forEach(function(r) {
+    var db = r.durum === "Aktif" ? '<span class="bg bg-s">Aktif</span>' : '<span class="bg bg-n">İade</span>';
+    html += '<tr><td class="mono">' + r.zimmetId + '</td><td class="bold">' + (r.urunAdi||'—') + '</td><td class="mono">' + (r.seriNo||'—') + '</td><td class="mono nw">' + (r.teslimTarihi||'') + '</td><td>' + db + '</td>';
+    if (canManage) html += '<td class="r-align">' + (r.durum === "Aktif" ? '<button class="act-btn no" onclick="doIade(\'' + r.zimmetId + '\')">İade</button>' : '—') + '</td>';
+    html += '</tr>';
+  });
+  c.innerHTML = html + '</tbody></table></div>';
+}
+
+// ═══ TÜM TALEPLER (Director) ═══
+function renderTumTalepler() {
+  var c = document.getElementById("tc-tumTalepler"); if (!c || !D) return;
+  var rows = D.tumTalepler || [];
+  if (!rows.length) { c.innerHTML = '<div class="t-wrap"><div class="empty-r">📋 Kayıt yok.</div></div>'; return; }
+
+  var fhtml = '<div class="fbar">';
+  ["Tümü","Müdür Onayı Bekliyor","Teknik Onay Bekliyor","Satınalma Aşamasında","Sipariş","Teslim","Reddedildi"].forEach(function(f) {
+    fhtml += '<button class="fchip' + (f===gFilter?' active':'') + '" onclick="setGF(this,\'' + f + '\')">' + f.replace(' Aşamasında','').replace(' Bekliyor','') + '</button>';
+  });
+  fhtml += '<input type="text" class="f-search" placeholder="🔍 Ara…" oninput="renderTT()" id="g-srch"></div>';
+
+  c.innerHTML = fhtml + '<div class="t-wrap" id="tt-wrap"><table><thead><tr><th>ID</th><th>Tarih</th><th>Talep Eden</th><th>Dep.</th><th>Ürün</th><th>Miktar</th><th>Süreç</th><th>Durum</th><th class="r-align">İşlem</th></tr></thead><tbody id="tt-body"></tbody></table></div>';
+  renderTT();
+}
+function setGF(btn, f) {
+  document.querySelectorAll("#tc-tumTalepler .fchip").forEach(function(b){ b.classList.remove("active"); });
+  btn.classList.add("active"); gFilter = f; renderTT();
+}
+function renderTT() {
+  var tbody = document.getElementById("tt-body"); if (!tbody || !D) return;
+  var rows = D.tumTalepler || [];
+  var src = (document.getElementById("g-srch")||{}).value || "";
+  if (gFilter !== "Tümü") {
+    if (gFilter === "Sipariş") rows = rows.filter(function(r){ return r.durum && r.durum.indexOf("Sipariş")>=0; });
+    else if (gFilter === "Teslim") rows = rows.filter(function(r){ return r.durum && (r.durum.indexOf("Teslim")>=0 || r.durum==="Zimmetlendi"); });
+    else rows = rows.filter(function(r){ return r.durum === gFilter; });
+  }
+  if (src) { var q = src.toLowerCase(); rows = rows.filter(function(r){ return (r.talepId||'').toLowerCase().indexOf(q)>=0 || (r.urunAdi||'').toLowerCase().indexOf(q)>=0 || (r.talepEdenIsim||'').toLowerCase().indexOf(q)>=0; }); }
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="9" class="empty-r">Sonuç yok.</td></tr>'; return; }
+  tbody.innerHTML = rows.map(function(r) {
+    var acts = dirActs(r);
+    return '<tr><td class="mono">' + r.talepId + '</td><td class="mono nw">' + (r.tarih||'') + '</td><td>' + (r.talepEdenIsim||'') + '</td><td class="mono" style="font-size:.68rem">' + (r.departman||'') + '</td><td class="bold">' + (r.urunAdi||'—') + '</td><td style="text-align:center">' + (r.miktar||'') + '</td><td>' + (r.surecTipi ? '<span class="bg bg-n">' + r.surecTipi + '</span>' : '') + '</td><td>' + badge(r.durum) + '</td><td class="r-align nw">' + acts + '</td></tr>';
+  }).join("");
+}
+function dirActs(r) {
+  var id = r.talepId;
+  switch(r.durum) {
+    case "Müdür Onayı Bekliyor": case "Teknik Onay Bekliyor": case "Direktör Onayı Bekliyor":
+      return '<button class="act-btn ok" onclick="doApprove(\'' + id + '\')">✓</button> <button class="act-btn no" onclick="doReject(\'' + id + '\')">✕</button>';
+    case "Sipariş Edilebilir": return '<button class="act-btn" onclick="doApprove(\'' + id + '\')">📦 Sipariş</button>';
+    case "Sipariş Edildi": return '<button class="act-btn ok" onclick="doApprove(\'' + id + '\')">✓ Teslim Al</button>';
+    case "Teslim Alındı": case "Teslim Edilebilir": return '<button class="act-btn ok" onclick="doApprove(\'' + id + '\')">🏷️ Teslim</button>';
+    default: return '<span class="mono">—</span>';
+  }
+}
+
+// ═══ STOK ═══
+function renderStok() {
+  var tbody = document.getElementById("stk-tbody"); if (!tbody || !D) return;
+  var rows = D.stok || [];
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty-r">📦 Stok yok.</td></tr>'; return; }
+  tbody.innerHTML = rows.map(function(s) {
+    var m = Number(s.mevcutStok)||0, k = Number(s.kritikSeviye)||0;
+    var pct = Math.min(100, k>0?(m/(k*3))*100:100);
+    var bc = m<=k?"sk-cr":m<=k*2?"sk-wn":"sk-ok";
+    var sb = m===0?'<span class="bg bg-d">Yok</span>':m<=k?'<span class="bg bg-w">Kritik</span>':'<span class="bg bg-s">Normal</span>';
+    return '<tr><td class="mono">' + s.urunId + '</td><td class="bold">' + s.urunAdi + '</td><td><span class="bg bg-n">' + (s.kategori||'') + '</span></td><td style="text-align:center"><strong>' + m + '</strong><div class="sk-bar"><div class="sk-fill ' + bc + '" style="width:' + pct + '%"></div></div></td><td style="text-align:center;color:var(--text-d)">' + k + '</td><td>' + (s.birim||'') + '</td><td>' + sb + '</td></tr>';
+  }).join("");
+}
+
+// ═══ STOK DROPDOWN ═══
+function loadStokDropdown() {
+  var sel = document.getElementById("f-stok"); if (!sel) return;
+  sel.innerHTML = '<option value="">— Stoktan seçin —</option>';
+  if (D && D.stok) D.stok.forEach(function(s) { sel.innerHTML += '<option value="' + s.urunId + '" data-a="' + s.urunAdi + '" data-s="' + s.mevcutStok + '" data-b="' + s.birim + '">' + s.urunAdi + ' (Stok: ' + s.mevcutStok + ')</option>'; });
+  else apiGet("getStok").then(function(r) { if (r.success) r.rows.forEach(function(s) { sel.innerHTML += '<option value="' + s.urunId + '" data-a="' + s.urunAdi + '" data-s="' + s.mevcutStok + '" data-b="' + (s.birim||'') + '">' + s.urunAdi + ' (' + s.mevcutStok + ')</option>'; }); });
+}
+function onStokSel() {
+  var sel = document.getElementById("f-stok"), o = sel.options[sel.selectedIndex], info = document.getElementById("stk-info"), inp = document.getElementById("f-urun");
+  if (sel.value && o.dataset) { inp.value = o.dataset.a || ""; var st = parseInt(o.dataset.s)||0; info.innerHTML = st > 0 ? '<div class="stk-info stk-ok">📦 Stokta: ' + st + ' ' + (o.dataset.b||'') + '</div>' : '<div class="stk-info stk-wn">⚠️ Stokta yok! Satınalma sürecine gidecek.</div>'; }
+  else { info.innerHTML = ""; inp.value = ""; }
+}
+
+// ═══ TALEP FORM SUBMIT ═══
+document.addEventListener("DOMContentLoaded", function() {
+  document.addEventListener("submit", function(e) {
+    if (e.target.id === "talep-form") {
+      e.preventDefault();
+      var uAdi = document.getElementById("f-urun").value.trim(), mkt = parseInt(document.getElementById("f-mkt").value)||1;
+      if (!uAdi) { document.getElementById("f-urun").classList.add("err"); return; }
+      document.getElementById("f-urun").classList.remove("err");
+      var btn = document.getElementById("t-sub"); btn.classList.add("loading"); btn.disabled = true;
+      apiPost({ action:"createRequest", email:USER.email, urunId:document.getElementById("f-stok").value||"", urunAdi:uAdi, miktar:mkt, teknikNot:document.getElementById("f-not").value.trim() })
+        .then(function(r) { btn.classList.remove("loading"); btn.disabled = false; toast("ok","✅ Talep Gönderildi", r.mesaj || "Müdür onayına iletildi."); e.target.reset(); document.getElementById("stk-info").innerHTML = ""; loadDash(); switchView("dashboard", document.querySelector('.nav-btn')); });
+    }
+    if (e.target.id === "sat-form") {
+      e.preventDefault();
+      var tid = document.getElementById("sf-tid").value, firma = document.getElementById("sf-firma").value.trim(), fiyat = parseFloat(document.getElementById("sf-fiyat").value), dvz = document.getElementById("sf-dvz").value;
+      if (!tid || !firma || !fiyat || !dvz) { toast("err","❌ Eksik","Zorunlu alanları doldurun."); return; }
+      var sel = document.getElementById("sf-tid"), opt = sel.options[sel.selectedIndex], mkt = opt.dataset ? parseInt(opt.dataset.m)||1 : 1;
+      var btn = document.getElementById("sf-sub"); btn.classList.add("loading"); btn.disabled = true;
+      apiPost({ action:"createSatinalma", email:USER.email, talepId:tid, firma:firma, birimFiyat:fiyat, miktar:mkt, doviz:dvz, odemeTipi:document.getElementById("sf-odm").value, vade:document.getElementById("sf-vade").value, butceKodu:document.getElementById("sf-btc").value })
+        .then(function(r) { btn.classList.remove("loading"); btn.disabled = false; toast("ok","✅ " + (r.mesaj||"Kaydedildi"), r.satinalmaId||""); e.target.reset(); document.getElementById("sf-top").style.display = "none"; document.getElementById("sf-krit").style.display = "none"; loadDash(); });
+    }
+  });
+});
+
+// ═══ SATINALMA TOPLAM ═══
+["sf-fiyat","sf-dvz"].forEach(function(id) { document.addEventListener("input", function(e){ if(e.target.id===id) calcSat(); }); document.addEventListener("change", function(e){ if(e.target.id===id) calcSat(); }); });
+function calcSat() {
+  var f = parseFloat(document.getElementById("sf-fiyat").value)||0, d = document.getElementById("sf-dvz").value;
+  var sel = document.getElementById("sf-tid"), opt = sel?sel.options[sel.selectedIndex]:null, m = opt&&opt.dataset?parseInt(opt.dataset.m)||1:1;
+  var t = f*m, sym = {TRY:"₺",USD:"$",EUR:"€"}[d]||"";
+  if (f>0&&d) { document.getElementById("sf-top").style.display = "flex"; document.getElementById("sf-topv").textContent = sym + t.toLocaleString("tr-TR",{minimumFractionDigits:2}); document.getElementById("sf-krit").style.display = d==="TRY"&&t>=100000?"block":"none"; }
+  else { document.getElementById("sf-top").style.display = "none"; document.getElementById("sf-krit").style.display = "none"; }
+}
+function loadSatBekleyen() {
+  if (!D) return;
+  var rows = (D.onayBekleyenler||[]).filter(function(t){ return t.durum === "Satınalma Aşamasında"; });
+  if (USER.rol === "Director" && D.tumTalepler) rows = D.tumTalepler.filter(function(t){ return t.durum === "Satınalma Aşamasında"; });
+  var sel = document.getElementById("sf-tid"); if (!sel) return;
+  sel.innerHTML = '<option value="">— Bekleyen talepler —</option>';
+  rows.forEach(function(t) { sel.innerHTML += '<option value="' + t.talepId + '" data-u="' + (t.urunAdi||t.urunId||'') + '" data-m="' + (t.miktar||1) + '">' + t.talepId + ' — ' + (t.urunAdi||t.urunId) + ' (' + t.miktar + ' adet)</option>'; });
+  sel.onchange = function() { var o = this.options[this.selectedIndex]; document.getElementById("sf-uadi").value = o.dataset ? (o.dataset.u||"") : ""; };
+}
+
+// ═══ ONAYLA / REDDET ═══
+function doApprove(id) {
+  openCMdl("Talep " + id + " onaylanacak. Devam?", function() {
+    toast("info","⏳","İşleniyor…");
+    apiPost({ action:"approveRequest", talepId:id, email:USER.email }).then(function(r) { toast("ok","✅ Onaylandı", id); loadDash(); });
+  });
+}
+function doReject(id) {
+  openCMdl("Talep " + id + " reddedilecek. Devam?", function() {
+    apiPost({ action:"rejectRequest", talepId:id, email:USER.email }).then(function(r) { toast("ok","❌ Reddedildi", id); loadDash(); });
+  });
+}
+
+// ═══ ZİMMET MODAL ═══
+function openZimmetMdl() {
+  apiGet("getPersonel").then(function(r) {
+    var sel = document.getElementById("zm-p"); sel.innerHTML = '<option value="">— Personel —</option>';
+    if (r.success) r.rows.forEach(function(p) { sel.innerHTML += '<option value="' + p.email + '">' + p.isim + ' — ' + p.departman + '</option>'; });
+  });
+  var uSel = document.getElementById("zm-u"); uSel.innerHTML = '<option value="">— Ürün —</option>';
+  if (D && D.stok) D.stok.forEach(function(s) { uSel.innerHTML += '<option value="' + s.urunId + '" data-a="' + s.urunAdi + '">' + s.urunAdi + ' (' + s.mevcutStok + ')</option>'; });
+  document.getElementById("z-mdl").classList.add("open");
+}
+function submitZimmet() {
+  var pe = document.getElementById("zm-p").value, uSel = document.getElementById("zm-u"), uId = uSel.value;
+  if (!pe || !uId) { toast("err","❌","Personel ve ürün seçin."); return; }
+  var uAdi = uSel.options[uSel.selectedIndex].dataset ? uSel.options[uSel.selectedIndex].dataset.a : "";
+  apiPost({ action:"createZimmet", email:USER.email, personelEmail:pe, urunId:uId, urunAdi:uAdi, seriNo:document.getElementById("zm-s").value, talepId:document.getElementById("zm-t").value, miktar:1 })
+    .then(function(r) { closeMdl("z-mdl"); toast("ok","✅ Zimmet Oluşturuldu",""); loadDash(); });
+}
+function doIade(zId) {
+  openCMdl("Zimmet " + zId + " iade edilsin mi?", function() {
+    apiPost({ action:"returnZimmet", zimmetId:zId, email:USER.email }).then(function() { toast("ok","✅ İade Edildi","Stok güncellendi."); loadDash(); });
+  });
+}
+
+// ═══ YARDIMCI ═══
+function badge(d) {
+  var m = {"Müdür Onayı Bekliyor":"bg-w","Teknik Onay Bekliyor":"bg-w","Satınalma Aşamasında":"bg-i","Direktör Onayı Bekliyor":"bg-p","Sipariş Edilebilir":"bg-c","Sipariş Edildi":"bg-c","Teslim Edilebilir":"bg-s","Teslim Alındı":"bg-s","Teslim Edildi":"bg-s","Zimmetlendi":"bg-s","Reddedildi":"bg-d","Beklemede":"bg-w"};
+  return '<span class="bg ' + (m[d]||"bg-n") + '">' + (d||'—') + '</span>';
+}
+function timeline(durum, surec) {
+  var ss = [{l:"Talep",k:"talep"},{l:"Müdür",k:"mudur"},{l:"Teknik",k:"teknik"},{l:"Teslim",k:"teslim"}];
+  var ps = [{l:"Talep",k:"talep"},{l:"Müdür",k:"mudur"},{l:"Teknik",k:"teknik"},{l:"Satınalma",k:"satinalma"},{l:"Direktör",k:"direktor"},{l:"Sipariş",k:"siparis"},{l:"Teslim",k:"teslim"}];
+  var steps = surec === "Stok" ? ss : ps, rej = durum === "Reddedildi";
+  var dm = {"Müdür Onayı Bekliyor":"mudur","Teknik Onay Bekliyor":"teknik","Satınalma Aşamasında":"satinalma","Direktör Onayı Bekliyor":"direktor","Sipariş Edilebilir":"siparis","Sipariş Edildi":"siparis","Teslim Edilebilir":"teslim","Teslim Alındı":"teslim","Teslim Edildi":"teslim","Zimmetlendi":"teslim"};
+  var ck = dm[durum]||"talep", keys = steps.map(function(s){return s.k}), ci = keys.indexOf(ck), h = "";
+  steps.forEach(function(s, i) {
+    var c = ""; if (rej) { c = i===0?"done":(i<=ci?"fail":""); } else if (i<ci) c = "done"; else if (i===ci) c = (durum&&(durum.indexOf("Teslim")>=0||durum==="Zimmetlendi"))?"done":"now";
+    h += '<div class="tl-step ' + c + '"><div class="tl-dot">' + (c==="done"?"✓":c==="fail"?"✕":(i+1)) + '</div><span class="tl-lbl">' + s.l + '</span></div>';
+  });
+  return h;
+}
+function el(tag, cls, id) { var e = document.createElement(tag); if (cls) e.className = cls; if (id) e.id = id; return e; }
+function toast(type, title, msg) {
+  var t = document.getElementById("toast"), ic = {ok:"✅",err:"❌",warn:"⚠️",info:"ℹ️"};
+  document.getElementById("ti").textContent = ic[type]||"✅"; document.getElementById("tt").textContent = title; document.getElementById("tm").textContent = msg||"";
+  t.className = "toast t-" + type + " show"; setTimeout(function(){ t.classList.remove("show"); }, 4500);
+}
+function openCMdl(msg, cb) {
+  document.getElementById("cm-b").textContent = msg; document.getElementById("c-mdl").classList.add("open");
+  document.getElementById("cm-ok").onclick = function() { closeMdl("c-mdl"); cb(); };
+}
+function closeMdl(id) { document.getElementById(id).classList.remove("open"); }
+</script>
 </body>
 </html>
