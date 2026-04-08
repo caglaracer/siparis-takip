@@ -1,0 +1,689 @@
+<script>
+// ══════════════════════════════════════════════════════════════
+//  CLIENT-SIDE JAVASCRIPT — RBAC Tedarik Yönetim Sistemi
+//  google.script.run kullanır (Apps Script HtmlService)
+// ══════════════════════════════════════════════════════════════
+
+/* ══ STATE ══ */
+let dashData = null;
+let globalFilter = "Tümü";
+
+/* ══ INIT ══ */
+document.addEventListener("DOMContentLoaded", function() {
+  loadDashboard();
+  loadStokDropdown();
+});
+
+/* ══════════════════════════════
+   ANA NAVİGASYON (View Switching)
+══════════════════════════════ */
+function switchMainView(viewName) {
+  document.querySelectorAll(".view-panel").forEach(v => v.classList.remove("active"));
+  document.querySelectorAll(".app-nav a").forEach(a => a.classList.remove("active"));
+  const target = document.getElementById("view-" + viewName);
+  if (target) target.classList.add("active");
+  event.target.classList.add("active");
+
+  // Satınalma formu açıldığında bekleyen talepleri yükle
+  if (viewName === "satinalmaForm") loadSatinalmaBekleyenler();
+}
+
+/* ══════════════════════════════
+   TAB SİSTEMİ
+══════════════════════════════ */
+function switchTab(btn) {
+  const parent = btn.closest(".view-panel");
+  parent.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  parent.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+  btn.classList.add("active");
+  const tab = parent.querySelector("#tab-" + btn.dataset.tab);
+  if (tab) tab.classList.add("active");
+}
+
+/* ══════════════════════════════
+   DASHBOARD VERİSİ YÜKLEME
+══════════════════════════════ */
+function loadDashboard() {
+  showLoading(true);
+  google.script.run
+    .withSuccessHandler(onDashboardLoaded)
+    .withFailureHandler(onError)
+    .getDashboardData();
+}
+
+function onDashboardLoaded(data) {
+  dashData = data;
+  showLoading(false);
+  updateStats();
+  renderTaleplerim();
+  renderOnayBekleyenler();
+  renderGecmisOnaylar();
+  renderZimmetlerim();
+  renderStokTable();
+  renderGlobalTable();
+}
+
+function onError(err) {
+  showLoading(false);
+  showToast("danger", "❌ Hata", err.message || "Veri yüklenemedi.");
+}
+
+/* ══════════════════════════════
+   İSTATİSTİKLER
+══════════════════════════════ */
+function updateStats() {
+  if (!dashData || !dashData.stats) return;
+  const s = dashData.stats;
+  setText("s-total", s.toplam || 0);
+  setTextSafe("s-onay", s.onayBekleyen || 0);
+  setTextSafe("s-satinalma", s.satinalma || 0);
+  setTextSafe("s-red", s.red || 0);
+
+  // Onay count badge
+  const countEl = document.getElementById("onay-count");
+  if (countEl) countEl.textContent = s.onayBekleyen || 0;
+}
+
+/* ══════════════════════════════
+   TALEPLERİM TABLOSU
+══════════════════════════════ */
+function renderTaleplerim() {
+  const body = document.getElementById("taleplerim-body");
+  if (!body || !dashData) return;
+  const rows = dashData.taleplerim || [];
+
+  if (rows.length === 0) {
+    body.innerHTML = '<div class="empty-row">📋 Henüz talebiniz bulunmamaktadır.</div>';
+    return;
+  }
+
+  let html = "";
+  rows.forEach(t => {
+    html += '<div class="talep-card">' +
+      '<div class="talep-card-header">' +
+        '<div class="talep-card-left">' +
+          '<span class="mono-sm">' + (t.talepId || '') + '</span> ' +
+          getDurumBadge(t.durum) + ' ' +
+          (t.surecTipi ? '<span class="badge-custom badge-neutral" style="font-size:.6rem">' + t.surecTipi + '</span>' : '') +
+        '</div>' +
+        '<span class="mono-sm">' + (t.tarih || '') + '</span>' +
+      '</div>' +
+      '<div class="talep-card-body">' +
+        '<strong>' + (t.urunAdi || t.urunId || '—') + '</strong>' +
+        '<span class="text-muted-sm"> &middot; Miktar: ' + (t.miktar || '—') + '</span>' +
+      '</div>' +
+      (t.teknikNot ? '<div class="talep-card-note">"' + t.teknikNot + '"</div>' : '') +
+      '<div class="timeline">' + buildTimeline(t.durum, t.surecTipi) + '</div>' +
+    '</div>';
+  });
+
+  body.innerHTML = html;
+}
+
+/* ══════════════════════════════
+   ONAY BEKLEYENLER — Onaycı roller
+══════════════════════════════ */
+function renderOnayBekleyenler() {
+  const tbody = document.getElementById("onay-tbody");
+  if (!tbody || !dashData) return;
+  const rows = dashData.onayBekleyenler || [];
+
+  setTextSafe("onay-meta", rows.length + " talep");
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty-row">✅ Onay bekleyen talep yok.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    return '<tr>' +
+      '<td class="td-mono">' + (r.talepId || '') + '</td>' +
+      '<td class="td-mono td-nowrap">' + (r.tarih || '') + '</td>' +
+      '<td>' + (r.talepEdenIsim || r.talepEdenEmail || '—') + '</td>' +
+      '<td class="text-muted-sm">' + (r.talepEdenDepartman || '—') + '</td>' +
+      '<td class="td-bold">' + (r.urunAdi || r.urunId || '—') + '</td>' +
+      '<td style="text-align:center">' + (r.miktar || '') + '</td>' +
+      '<td>' + (r.surecTipi ? '<span class="badge-custom badge-neutral" style="font-size:.6rem">' + r.surecTipi + '</span>' : '') + '</td>' +
+      '<td>' + getDurumBadge(r.durum) + '</td>' +
+      '<td class="td-right td-nowrap">' +
+        '<button class="btn-action success" onclick="doApproval(\'' + r.talepId + '\',\'onayla\')">✓ Onayla</button> ' +
+        '<button class="btn-action danger" onclick="doApproval(\'' + r.talepId + '\',\'reddet\')">✕ Ret</button>' +
+      '</td>' +
+    '</tr>';
+  }).join("");
+}
+
+/* ══════════════════════════════
+   GEÇMİŞ ONAYLARIM
+══════════════════════════════ */
+function renderGecmisOnaylar() {
+  const tbody = document.getElementById("gecmis-tbody");
+  if (!tbody || !dashData) return;
+  const rows = dashData.gecmisOnaylarim || [];
+
+  setTextSafe("gecmis-meta", rows.length + " kayıt");
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-row">📜 Geçmiş onay kaydı yok.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r =>
+    '<tr>' +
+      '<td class="td-mono">' + (r.talepId || '') + '</td>' +
+      '<td class="td-mono td-nowrap">' + (r.tarih || '') + '</td>' +
+      '<td>' + (r.talepEdenIsim || r.talepEdenEmail || '—') + '</td>' +
+      '<td class="td-bold">' + (r.urunAdi || '—') + '</td>' +
+      '<td style="text-align:center">' + (r.miktar || '') + '</td>' +
+      '<td>' + (r.surecTipi ? '<span class="badge-custom badge-neutral" style="font-size:.6rem">' + r.surecTipi + '</span>' : '') + '</td>' +
+      '<td>' + getDurumBadge(r.durum) + '</td>' +
+      '<td class="td-mono text-muted-sm">' + (r.sonIslemTarihi || '') + '</td>' +
+    '</tr>'
+  ).join("");
+}
+
+/* ══════════════════════════════
+   ZİMMETLERİM
+══════════════════════════════ */
+function renderZimmetlerim() {
+  const tbody = document.getElementById("zimmet-tbody");
+  if (!tbody || !dashData) return;
+  const rows = dashData.zimmetlerim || [];
+  const canManage = ["IT", "Procurement", "Director"].includes(USER_ROLE);
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="' + (canManage ? 7 : 6) + '" class="empty-row">📦 Zimmet kaydı yok.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    const badge = r.durum === "Aktif"
+      ? '<span class="badge-custom badge-success">Aktif</span>'
+      : '<span class="badge-custom badge-neutral">İade</span>';
+    const actions = canManage && r.durum === "Aktif"
+      ? '<td class="td-right"><button class="btn-action danger" onclick="doIade(\'' + r.zimmetId + '\')">İade Et</button></td>'
+      : (canManage ? '<td class="td-right">—</td>' : '');
+
+    return '<tr>' +
+      '<td class="td-mono">' + r.zimmetId + '</td>' +
+      '<td class="td-bold">' + (r.urunAdi || '—') + '</td>' +
+      '<td class="td-mono">' + (r.seriNo || '—') + '</td>' +
+      '<td class="td-mono td-nowrap">' + (r.teslimTarihi || '—') + '</td>' +
+      '<td>' + (r.teslimEden || '—') + '</td>' +
+      '<td>' + badge + '</td>' +
+      actions +
+    '</tr>';
+  }).join("");
+}
+
+/* ══════════════════════════════
+   STOK TABLOSU (IT/Procurement/Director)
+══════════════════════════════ */
+function renderStokTable() {
+  const tbody = document.getElementById("stok-tbody");
+  if (!tbody || !dashData) return;
+  const rows = dashData.stok || [];
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-row">📦 Stok verisi yok.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(s => {
+    const m = Number(s.mevcutStok) || 0;
+    const k = Number(s.kritikSeviye) || 0;
+    const pct = Math.min(100, k > 0 ? (m / (k * 3)) * 100 : 100);
+    const barCls = m <= k ? "crit" : m <= k * 2 ? "warn" : "ok";
+    const statusBadge = m === 0
+      ? '<span class="badge-custom badge-danger">Yok</span>'
+      : m <= k
+        ? '<span class="badge-custom badge-warning">Kritik</span>'
+        : '<span class="badge-custom badge-success">Normal</span>';
+
+    return '<tr>' +
+      '<td class="td-mono">' + s.urunId + '</td>' +
+      '<td class="td-bold">' + s.urunAdi + '</td>' +
+      '<td><span class="badge-custom badge-neutral" style="font-size:.6rem">' + (s.kategori || '') + '</span></td>' +
+      '<td style="text-align:center"><strong>' + m + '</strong>' +
+        '<div class="stok-bar"><div class="stok-bar-fill ' + barCls + '" style="width:' + pct + '%"></div></div></td>' +
+      '<td style="text-align:center;color:var(--text-dim)">' + k + '</td>' +
+      '<td>' + (s.birim || '') + '</td>' +
+      '<td>' + statusBadge + '</td>' +
+    '</tr>';
+  }).join("");
+}
+
+/* ══════════════════════════════
+   TÜM TALEPLER TABLOSU (Director)
+══════════════════════════════ */
+function setGlobalFilter(btn) {
+  document.querySelectorAll("#tab-tumTalepler .filter-chip").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  globalFilter = btn.dataset.f;
+  renderGlobalTable();
+}
+
+function renderGlobalTable() {
+  const tbody = document.getElementById("global-tbody");
+  if (!tbody || !dashData) return;
+  let rows = dashData.tumTalepler || [];
+  const search = (document.getElementById("global-search")?.value || "").toLowerCase();
+
+  if (globalFilter !== "Tümü") {
+    if (globalFilter === "Sipariş") rows = rows.filter(r => r.durum && r.durum.includes("Sipariş"));
+    else if (globalFilter === "Teslim") rows = rows.filter(r => r.durum && r.durum.includes("Teslim"));
+    else if (globalFilter === "Satınalma") rows = rows.filter(r => r.durum && r.durum.includes("Satınalma"));
+    else rows = rows.filter(r => r.durum === globalFilter);
+  }
+
+  if (search) {
+    rows = rows.filter(r =>
+      (r.talepId || "").toLowerCase().includes(search) ||
+      (r.urunAdi || "").toLowerCase().includes(search) ||
+      (r.talepEdenIsim || "").toLowerCase().includes(search)
+    );
+  }
+
+  setTextSafe("global-meta", rows.length + " kayıt");
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty-row">Sonuç bulunamadı.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    const actions = getDirectorActions(r);
+    return '<tr>' +
+      '<td class="td-mono">' + (r.talepId || '') + '</td>' +
+      '<td class="td-mono td-nowrap">' + (r.tarih || '') + '</td>' +
+      '<td>' + (r.talepEdenIsim || r.talepEdenEmail || '—') + '</td>' +
+      '<td class="text-muted-sm">' + (r.talepEdenDepartman || '') + '</td>' +
+      '<td class="td-bold">' + (r.urunAdi || '—') + '</td>' +
+      '<td style="text-align:center">' + (r.miktar || '') + '</td>' +
+      '<td>' + (r.surecTipi ? '<span class="badge-custom badge-neutral" style="font-size:.6rem">' + r.surecTipi + '</span>' : '') + '</td>' +
+      '<td>' + getDurumBadge(r.durum) + '</td>' +
+      '<td class="td-right td-nowrap">' + actions + '</td>' +
+    '</tr>';
+  }).join("");
+}
+
+function getDirectorActions(row) {
+  const id = row.talepId;
+  switch (row.durum) {
+    case "Müdür Onayı Bekliyor":
+    case "Teknik Onay Bekliyor":
+    case "Direktör Onayı Bekliyor":
+      return '<button class="btn-action success" onclick="doApproval(\'' + id + '\',\'onayla\')">✓</button> ' +
+             '<button class="btn-action danger" onclick="doApproval(\'' + id + '\',\'reddet\')">✕</button>';
+    case "Sipariş Edilebilir":
+      return '<button class="btn-action" onclick="doApproval(\'' + id + '\',\'onayla\')">📦 Sipariş</button>';
+    case "Sipariş Edildi":
+      return '<button class="btn-action success" onclick="doApproval(\'' + id + '\',\'onayla\')">✓ Teslim Al</button>';
+    case "Teslim Alındı":
+    case "Teslim Edilebilir":
+      return '<button class="btn-action success" onclick="doApproval(\'' + id + '\',\'onayla\')">🏷️ Teslim Et</button>';
+    default:
+      return '<span class="text-muted-sm">—</span>';
+  }
+}
+
+/* ══════════════════════════════
+   ONAY / RED İŞLEMİ
+══════════════════════════════ */
+function doApproval(talepId, aksiyonTipi) {
+  const msg = aksiyonTipi === "onayla"
+    ? "Talep " + talepId + " onaylanacak. Devam edilsin mi?"
+    : "Talep " + talepId + " reddedilecek. Devam edilsin mi?";
+
+  openConfirmModal(msg, function() {
+    showToast("info", "⏳ İşleniyor…", "Lütfen bekleyin.");
+    google.script.run
+      .withSuccessHandler(function(result) {
+        showToast("success", "✅ " + result.mesaj, "Talep: " + result.talepId);
+        loadDashboard();
+      })
+      .withFailureHandler(onError)
+      .processApproval(talepId, aksiyonTipi);
+  });
+}
+
+/* ══════════════════════════════
+   TALEP FORMU
+══════════════════════════════ */
+document.getElementById("talep-form").addEventListener("submit", function(e) {
+  e.preventDefault();
+  const urunAdi = document.getElementById("f-urun-adi").value.trim();
+  const miktar = parseInt(document.getElementById("f-miktar").value) || 1;
+
+  if (!urunAdi) {
+    document.getElementById("f-urun-adi").classList.add("error");
+    return;
+  }
+  document.getElementById("f-urun-adi").classList.remove("error");
+
+  const btn = document.getElementById("talep-submit");
+  btn.classList.add("loading"); btn.disabled = true;
+
+  const stokSel = document.getElementById("f-urun-stok");
+  const formData = {
+    urunId: stokSel.value || "",
+    urunAdi: urunAdi,
+    miktar: miktar,
+    teknikNot: document.getElementById("f-aciklama").value.trim(),
+  };
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      btn.classList.remove("loading"); btn.disabled = false;
+      showToast("success", "✅ Talep Gönderildi", result.mesaj);
+      document.getElementById("talep-form").reset();
+      document.getElementById("stok-bilgi").innerHTML = "";
+      loadDashboard();
+      switchMainView("dashboard");
+    })
+    .withFailureHandler(function(err) {
+      btn.classList.remove("loading"); btn.disabled = false;
+      onError(err);
+    })
+    .createNewTalep(formData);
+});
+
+/* ══════════════════════════════
+   STOK DROPDOWN
+══════════════════════════════ */
+function loadStokDropdown() {
+  google.script.run
+    .withSuccessHandler(function(rows) {
+      const sel = document.getElementById("f-urun-stok");
+      sel.innerHTML = '<option value="">— Stoktan ürün seçin —</option>';
+      (rows || []).forEach(function(s) {
+        var opt = document.createElement("option");
+        opt.value = s.urunId;
+        opt.textContent = s.urunAdi + " (Stok: " + s.mevcutStok + " " + s.birim + ")";
+        opt.dataset.adi = s.urunAdi;
+        opt.dataset.stok = s.mevcutStok;
+        opt.dataset.birim = s.birim;
+        sel.appendChild(opt);
+      });
+    })
+    .getStokListForForm();
+}
+
+function onStokSelect() {
+  const sel = document.getElementById("f-urun-stok");
+  const opt = sel.options[sel.selectedIndex];
+  const bilgi = document.getElementById("stok-bilgi");
+  const input = document.getElementById("f-urun-adi");
+
+  if (sel.value && opt.dataset) {
+    input.value = opt.dataset.adi || "";
+    const stok = parseInt(opt.dataset.stok) || 0;
+    if (stok > 0) {
+      bilgi.innerHTML = '<span class="stok-ok">📦 Stokta mevcut: ' + stok + ' ' + (opt.dataset.birim || '') + '. Stok süreci olarak işlenecek.</span>';
+    } else {
+      bilgi.innerHTML = '<span class="stok-warn">⚠️ Stokta yok! Satınalma sürecine yönlendirilecek.</span>';
+    }
+  } else {
+    bilgi.innerHTML = "";
+    input.value = "";
+  }
+}
+
+/* ══════════════════════════════
+   SATINALMA FORMU (Procurement/Director)
+══════════════════════════════ */
+function loadSatinalmaBekleyenler() {
+  if (!dashData) return;
+  var bekleyenler = (dashData.onayBekleyenler || []).filter(function(t) {
+    return t.durum === "Satınalma Aşamasında";
+  });
+
+  // Eğer Director ise tüm taleplerden filtrele
+  if (USER_ROLE === "Director" && dashData.tumTalepler) {
+    bekleyenler = dashData.tumTalepler.filter(function(t) {
+      return t.durum === "Satınalma Aşamasında";
+    });
+  }
+
+  var sel = document.getElementById("s-talep-id");
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— Bekleyen talepler —</option>';
+  bekleyenler.forEach(function(t) {
+    var opt = document.createElement("option");
+    opt.value = t.talepId;
+    opt.textContent = t.talepId + " — " + (t.urunAdi || t.urunId) + " (" + t.miktar + " adet)";
+    opt.dataset.urunAdi = t.urunAdi || t.urunId || "";
+    opt.dataset.miktar = t.miktar || 1;
+    sel.appendChild(opt);
+  });
+
+  sel.onchange = function() {
+    var o = this.options[this.selectedIndex];
+    document.getElementById("s-urun-adi").value = o.dataset ? (o.dataset.urunAdi || "") : "";
+  };
+}
+
+// Toplam hesaplama
+["s-fiyat", "s-doviz"].forEach(function(id) {
+  var el = document.getElementById(id);
+  if (el) {
+    el.addEventListener("input", updateSatToplam);
+    el.addEventListener("change", updateSatToplam);
+  }
+});
+
+function updateSatToplam() {
+  var fiyat = parseFloat(document.getElementById("s-fiyat").value) || 0;
+  var doviz = document.getElementById("s-doviz").value;
+  var sel = document.getElementById("s-talep-id");
+  var opt = sel ? sel.options[sel.selectedIndex] : null;
+  var miktar = opt && opt.dataset ? parseInt(opt.dataset.miktar) || 1 : 1;
+  var toplam = fiyat * miktar;
+  var sym = {TRY:"₺",USD:"$",EUR:"€"}[doviz] || "";
+  var card = document.getElementById("s-toplam-card");
+  var kritik = document.getElementById("s-kritik");
+
+  if (fiyat > 0 && doviz) {
+    card.style.display = "flex";
+    document.getElementById("s-toplam").textContent = sym + toplam.toLocaleString("tr-TR", {minimumFractionDigits:2});
+    kritik.style.display = doviz === "TRY" && toplam >= 100000 ? "block" : "none";
+  } else {
+    card.style.display = "none";
+    kritik.style.display = "none";
+  }
+}
+
+// Satınalma form submit
+var satForm = document.getElementById("sat-form");
+if (satForm) {
+  satForm.addEventListener("submit", function(e) {
+    e.preventDefault();
+    var talepId = document.getElementById("s-talep-id").value;
+    var firma = document.getElementById("s-firma").value.trim();
+    var fiyat = parseFloat(document.getElementById("s-fiyat").value);
+    var doviz = document.getElementById("s-doviz").value;
+    if (!talepId || !firma || !fiyat || !doviz) {
+      showToast("danger", "❌ Eksik Alan", "Zorunlu alanları doldurunuz.");
+      return;
+    }
+    var sel = document.getElementById("s-talep-id");
+    var opt = sel.options[sel.selectedIndex];
+    var miktar = opt && opt.dataset ? parseInt(opt.dataset.miktar) || 1 : 1;
+
+    var btn = document.getElementById("sat-submit");
+    btn.classList.add("loading"); btn.disabled = true;
+
+    google.script.run
+      .withSuccessHandler(function(result) {
+        btn.classList.remove("loading"); btn.disabled = false;
+        showToast("success", "✅ " + result.mesaj, "ID: " + result.satinalmaId);
+        satForm.reset();
+        document.getElementById("s-toplam-card").style.display = "none";
+        document.getElementById("s-kritik").style.display = "none";
+        loadDashboard();
+      })
+      .withFailureHandler(function(err) {
+        btn.classList.remove("loading"); btn.disabled = false;
+        onError(err);
+      })
+      .createSatinalmaKaydi({
+        talepId: talepId, firma: firma, birimFiyat: fiyat, miktar: miktar,
+        doviz: doviz,
+        odemeTipi: document.getElementById("s-odeme").value,
+        vade: document.getElementById("s-vade").value.trim(),
+        butceKodu: document.getElementById("s-butce").value.trim(),
+      });
+  });
+}
+
+/* ══════════════════════════════
+   ZİMMET MODAL
+══════════════════════════════ */
+function openZimmetModal() {
+  google.script.run
+    .withSuccessHandler(function(personelRows) {
+      var pSel = document.getElementById("zm-personel");
+      if (pSel) {
+        pSel.innerHTML = '<option value="">— Personel —</option>';
+        (personelRows || []).forEach(function(p) {
+          pSel.innerHTML += '<option value="' + p.email + '">' + p.isim + ' — ' + p.departman + '</option>';
+        });
+      }
+    })
+    .getPersonelListForForm();
+
+  var uSel = document.getElementById("zm-urun");
+  if (uSel && dashData && dashData.stok) {
+    uSel.innerHTML = '<option value="">— Ürün —</option>';
+    dashData.stok.forEach(function(s) {
+      uSel.innerHTML += '<option value="' + s.urunId + '" data-adi="' + s.urunAdi + '">' + s.urunAdi + ' (' + s.mevcutStok + ' ' + s.birim + ')</option>';
+    });
+  }
+
+  document.getElementById("zimmet-modal").classList.add("open");
+}
+
+function closeZimmetModal() {
+  document.getElementById("zimmet-modal").classList.remove("open");
+}
+
+function submitZimmet() {
+  var pEmail = document.getElementById("zm-personel").value;
+  var uSel = document.getElementById("zm-urun");
+  var uId = uSel.value;
+  var uAdi = uSel.options[uSel.selectedIndex]?.dataset?.adi || "";
+  var seri = document.getElementById("zm-seri").value.trim();
+  var talepId = document.getElementById("zm-talep").value.trim();
+
+  if (!pEmail || !uId) {
+    showToast("danger", "❌ Eksik", "Personel ve ürün seçimi zorunlu.");
+    return;
+  }
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      closeZimmetModal();
+      showToast("success", "✅ " + result.mesaj, "ID: " + result.zimmetId);
+      loadDashboard();
+    })
+    .withFailureHandler(onError)
+    .createZimmetKaydi({
+      personelEmail: pEmail, urunId: uId, urunAdi: uAdi,
+      seriNo: seri, talepId: talepId, miktar: 1,
+    });
+}
+
+/* ══════════════════════════════
+   İADE İŞLEMİ
+══════════════════════════════ */
+function doIade(zimmetId) {
+  openConfirmModal("Zimmet " + zimmetId + " iade edilsin mi? Stok güncellenir.", function() {
+    google.script.run
+      .withSuccessHandler(function(result) {
+        showToast("success", "✅ " + result.mesaj, "");
+        loadDashboard();
+      })
+      .withFailureHandler(onError)
+      .processIade(zimmetId);
+  });
+}
+
+/* ══════════════════════════════
+   TIMELINE OLUŞTURUCU
+══════════════════════════════ */
+function buildTimeline(durum, surecTipi) {
+  var stokSteps = [{l:"Talep",k:"talep"},{l:"Müdür",k:"mudur"},{l:"Teknik",k:"teknik"},{l:"Teslim",k:"teslim"}];
+  var satSteps = [{l:"Talep",k:"talep"},{l:"Müdür",k:"mudur"},{l:"Teknik",k:"teknik"},{l:"Satınalma",k:"satinalma"},
+                  {l:"Direktör",k:"direktor"},{l:"Sipariş",k:"siparis"},{l:"Teslim",k:"teslim"}];
+  var steps = surecTipi === "Stok" ? stokSteps : satSteps;
+  var rejected = durum === "Reddedildi";
+
+  var dMap = {
+    "Müdür Onayı Bekliyor":"mudur", "Teknik Onay Bekliyor":"teknik",
+    "Satınalma Aşamasında":"satinalma", "Direktör Onayı Bekliyor":"direktor",
+    "Sipariş Edilebilir":"siparis", "Sipariş Edildi":"siparis",
+    "Teslim Edilebilir":"teslim", "Teslim Alındı":"teslim", "Teslim Edildi":"teslim",
+  };
+  var curKey = dMap[durum] || "talep";
+  var keys = steps.map(function(s){return s.k});
+  var curIdx = keys.indexOf(curKey);
+
+  var html = "";
+  steps.forEach(function(step, i) {
+    var cls = "";
+    if (rejected) {
+      cls = i === 0 ? "completed" : (i <= curIdx ? "rejected" : "");
+    } else if (i < curIdx) cls = "completed";
+    else if (i === curIdx) cls = (durum && durum.includes("Teslim")) ? "completed" : "active";
+
+    var icon = cls === "completed" ? "✓" : cls === "rejected" ? "✕" : (i+1);
+    html += '<div class="timeline-step ' + cls + '"><div class="step-dot">' + icon + '</div><span class="step-label">' + step.l + '</span></div>';
+  });
+  return html;
+}
+
+/* ══════════════════════════════
+   YARDIMCI
+══════════════════════════════ */
+function getDurumBadge(durum) {
+  var map = {
+    "Müdür Onayı Bekliyor":"badge-warning", "Teknik Onay Bekliyor":"badge-warning",
+    "Satınalma Aşamasında":"badge-info", "Direktör Onayı Bekliyor":"badge-purple",
+    "Sipariş Edilebilir":"badge-cyan", "Sipariş Edildi":"badge-cyan",
+    "Teslim Edilebilir":"badge-success", "Teslim Alındı":"badge-success", "Teslim Edildi":"badge-success",
+    "Reddedildi":"badge-danger", "Beklemede":"badge-warning", "Onaylandı":"badge-success",
+  };
+  var cls = map[durum] || "badge-neutral";
+  return '<span class="badge-custom ' + cls + '">' + (durum || '—') + '</span>';
+}
+
+function setText(id, val) { document.getElementById(id).textContent = val; }
+function setTextSafe(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+
+function showToast(type, title, msg) {
+  var t = document.getElementById("toast");
+  var icons = {success:"✅",danger:"❌",warning:"⚠️",info:"ℹ️"};
+  document.getElementById("t-icon").textContent = icons[type] || "✅";
+  document.getElementById("t-title").textContent = title;
+  document.getElementById("t-msg").textContent = msg;
+  t.className = "toast-box toast-" + type + " show";
+  setTimeout(function(){ t.classList.remove("show"); }, 5000);
+}
+
+function showLoading(show) {
+  // Basit loading indicator — ilk yükleme için
+}
+
+function openConfirmModal(msg, callback) {
+  document.getElementById("cm-body").textContent = msg;
+  document.getElementById("confirm-modal").classList.add("open");
+  document.getElementById("cm-ok").onclick = function() {
+    closeConfirmModal();
+    callback();
+  };
+}
+
+function closeConfirmModal() {
+  document.getElementById("confirm-modal").classList.remove("open");
+}
+</script>

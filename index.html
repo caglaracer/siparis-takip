@@ -1,202 +1,24 @@
 <!DOCTYPE html>
 <html lang="tr">
-
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base target="_top">
   <title>Tedarik ve Zimmet Yönetim Sistemi</title>
-  <meta name="description" content="Kurumsal satınalma talep, stok yönetimi ve zimmet takip sistemi">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-    rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="Styles.html">
-  <style>
-    /* ── Styles.html inline (GitHub Pages uyumluluğu) ── */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-    :root {
-      --bg:#f0f4f8;--surface:#ffffff;--surface-2:#f8fafc;--surface-3:#f1f5f9;
-      --border:#e2e8f0;--border-hover:#cbd5e1;
-      --primary:#2563eb;--primary-hover:#1d4ed8;--primary-dim:rgba(37,99,235,.1);--primary-glow:rgba(37,99,235,.2);
-      --success:#059669;--success-dim:rgba(5,150,105,.1);
-      --warning:#d97706;--warning-dim:rgba(217,119,6,.1);
-      --danger:#dc2626;--danger-dim:rgba(220,38,38,.1);
-      --info:#2563eb;--info-dim:rgba(37,99,235,.1);
-      --purple:#7c3aed;--purple-dim:rgba(124,58,237,.1);
-      --cyan:#0891b2;--cyan-dim:rgba(8,145,178,.1);
-      --text:#0f172a;--text-muted:#475569;--text-dim:#94a3b8;--text-inv:#ffffff;
-      --font:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
-      --font-mono:'Courier New',monospace;
-      --radius-sm:6px;--radius:10px;--radius-lg:14px;--radius-xl:20px;
-      --shadow-sm:0 1px 3px rgba(0,0,0,.06);--shadow:0 4px 16px rgba(0,0,0,.06);
-      --shadow-lg:0 8px 32px rgba(0,0,0,.08);
-      --ease:cubic-bezier(.4,0,.2,1);--ease-bounce:cubic-bezier(.34,1.56,.64,1);
-    }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
-
-    /* Login */
-    .login-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999}
-    .login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:48px 44px;width:380px;max-width:90vw;text-align:center;box-shadow:var(--shadow-lg)}
-    .login-card .login-icon{width:64px;height:64px;background:var(--primary-dim);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 20px}
-    .login-card h2{font-size:1.35rem;font-weight:700;margin-bottom:6px}
-    .login-card .login-subtitle{color:var(--text-muted);font-size:.85rem;margin-bottom:28px}
-    .login-card input[type="password"]{width:100%;background:var(--surface-3);border:1.5px solid var(--border);border-radius:var(--radius);padding:13px 18px;color:var(--text);font-family:var(--font-mono);font-size:1.1rem;letter-spacing:4px;text-align:center;outline:none;margin-bottom:14px;transition:border-color .2s,box-shadow .2s}
-    .login-card input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-dim)}
-    .login-card .btn-login{width:100%;background:var(--primary);color:var(--text-inv);border:none;border-radius:var(--radius);padding:13px;font-family:var(--font);font-weight:700;font-size:.95rem;cursor:pointer;transition:background .2s,transform .1s}
-    .login-card .btn-login:hover{background:var(--primary-hover)}
-    .login-card .btn-login:active{transform:scale(.98)}
-    .login-error-msg{color:var(--danger);font-size:.78rem;font-weight:500;margin-top:12px;display:none}
-    .login-error-msg.show{display:block;animation:shake .4s var(--ease)}
-
-    /* Header */
-    .app-header{display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:64px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:var(--shadow-sm)}
-    .app-logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1rem;letter-spacing:-.02em}
-    .app-logo .logo-dot{width:8px;height:8px;background:var(--primary);border-radius:2px;transform:rotate(45deg)}
-    .app-logo .version-badge{background:var(--primary);color:var(--text-inv);font-size:.6rem;font-weight:700;padding:2px 6px;border-radius:4px}
-    .app-nav{display:flex;gap:2px}
-    .app-nav a{color:var(--text-muted);text-decoration:none;font-size:.82rem;font-weight:500;padding:8px 16px;border-radius:var(--radius-sm);transition:all .2s}
-    .app-nav a:hover{color:var(--text);background:var(--surface-3)}
-    .app-nav a.active{color:var(--primary);background:var(--primary-dim)}
-
-    /* Main */
-    .app-main{max-width:780px;margin:0 auto;padding:32px 28px 80px}
-    .page-header{margin-bottom:28px}
-    .page-header .eyebrow{font-size:.72rem;font-weight:600;color:var(--primary);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px}
-    .page-header h1{font-size:1.8rem;font-weight:800;letter-spacing:-.03em;line-height:1.1}
-    .page-header .subtitle{color:var(--text-muted);font-size:.88rem;margin-top:8px}
-
-    /* Tab Nav */
-    .tab-nav{display:flex;gap:4px;background:var(--surface);padding:6px;border-radius:var(--radius);border:1px solid var(--border);margin-bottom:24px}
-    .tab-btn{flex:1;background:transparent;border:none;color:var(--text-muted);font-family:var(--font);font-size:.82rem;font-weight:600;padding:10px 16px;border-radius:var(--radius-sm);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
-    .tab-btn:hover{color:var(--text);background:var(--surface-3)}
-    .tab-btn.active{color:var(--primary);background:var(--primary-dim);box-shadow:var(--shadow-sm)}
-    .tab-content{display:none}
-    .tab-content.active{display:block;animation:fadeSlideUp .3s var(--ease)}
-
-    /* Card base */
-    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm)}
-    .form-section{padding:24px 28px;border-bottom:1px solid var(--border)}
-    .form-section:last-child{border-bottom:none}
-    .section-title{font-size:.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:18px;display:flex;align-items:center;gap:8px}
-    .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
-    .form-grid{display:grid;gap:16px}
-    .form-grid.cols-2{grid-template-columns:1fr 1fr}
-    .form-grid.cols-3{grid-template-columns:1fr 1fr 1fr}
-
-    .field{display:flex;flex-direction:column;gap:6px}
-    .field label{font-size:.78rem;font-weight:500;color:var(--text-dim)}
-    .field label .req{color:var(--danger);margin-left:2px}
-    .field input,.field select,.field textarea{background:var(--surface-3);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-family:var(--font);font-size:.88rem;outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none}
-    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-dim);background:var(--surface)}
-    .field input.error,.field select.error{border-color:var(--danger);box-shadow:0 0 0 3px var(--danger-dim)}
-    .field .err-msg{font-size:.72rem;color:var(--danger);font-weight:500;display:none}
-    .field input.error~.err-msg,.field select.error~.err-msg{display:block}
-    .field textarea{resize:vertical;min-height:80px;font-family:var(--font)}
-
-    /* Price card */
-    .price-card{background:linear-gradient(135deg,var(--primary-dim),rgba(37,99,235,.05));border:1px solid var(--primary-glow);border-radius:var(--radius);padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
-    .price-card .price-label{font-size:.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em}
-    .price-card .price-amount{font-family:var(--font-mono);font-size:1.3rem;font-weight:700;color:var(--primary)}
-
-    /* Buttons */
-    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:var(--font);font-weight:600;font-size:.85rem;padding:10px 20px;border-radius:var(--radius-sm);border:none;cursor:pointer;white-space:nowrap;transition:all .2s}
-    .btn:active{transform:scale(.97)}.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-    .btn-primary{background:var(--primary);color:var(--text-inv)}.btn-primary:hover{background:var(--primary-hover)}
-    .btn-outline{background:var(--surface);color:var(--text-muted);border:1px solid var(--border)}.btn-outline:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-dim)}
-    .btn .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:none}
-    .btn.loading .spinner{display:block}.btn.loading .btn-label{display:none}
-
-    /* Form footer */
-    .form-footer{padding:20px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-    .form-footer .hint{font-size:.78rem;color:var(--text-muted);line-height:1.5;max-width:340px}
-
-    /* Badge */
-    .badge-custom{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:5px;font-size:.7rem;font-weight:600;white-space:nowrap}
-    .badge-custom::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
-    .badge-warning{background:var(--warning-dim);color:var(--warning)}
-    .badge-success{background:var(--success-dim);color:var(--success)}
-    .badge-danger{background:var(--danger-dim);color:var(--danger)}
-    .badge-info{background:var(--info-dim);color:var(--info)}
-    .badge-purple{background:var(--purple-dim);color:var(--purple)}
-    .badge-cyan{background:var(--cyan-dim);color:var(--cyan)}
-    .badge-neutral{background:var(--surface-3);color:var(--text-muted)}
-
-    /* Timeline */
-    .timeline{display:flex;align-items:flex-start;gap:0;padding:16px 8px;overflow-x:auto}
-    .timeline-step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;min-width:80px}
-    .timeline-step .step-dot{width:28px;height:28px;border-radius:50%;background:var(--surface-3);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:var(--text-dim);z-index:2;transition:all .3s}
-    .timeline-step.completed .step-dot{background:var(--success);border-color:var(--success);color:var(--text-inv)}
-    .timeline-step.active .step-dot{background:var(--primary);border-color:var(--primary);color:var(--text-inv);box-shadow:0 0 0 4px var(--primary-dim);animation:pulse 2s infinite}
-    .timeline-step.rejected .step-dot{background:var(--danger);border-color:var(--danger);color:var(--text-inv)}
-    .timeline-step .step-label{font-size:.62rem;font-weight:500;color:var(--text-dim);margin-top:6px;text-align:center;max-width:72px;line-height:1.3}
-    .timeline-step.completed .step-label,.timeline-step.active .step-label{color:var(--text);font-weight:600}
-    .timeline-step::after{content:'';position:absolute;top:14px;left:50%;width:100%;height:2px;background:var(--border);z-index:1}
-    .timeline-step:last-child::after{display:none}
-    .timeline-step.completed::after{background:var(--success)}
-
-    /* Toast */
-    .toast-custom{position:fixed;bottom:28px;right:28px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;max-width:380px;box-shadow:var(--shadow-lg);transform:translateY(120px);opacity:0;transition:all .4s var(--ease-bounce);z-index:600;display:flex;align-items:flex-start;gap:12px}
-    .toast-custom.show{transform:translateY(0);opacity:1}
-    .toast-custom.toast-success{border-left:3px solid var(--success)}
-    .toast-custom.toast-danger{border-left:3px solid var(--danger)}
-    .toast-custom .toast-icon{font-size:1.2rem;flex-shrink:0}
-    .toast-custom .toast-body{flex:1}
-    .toast-custom .toast-title{font-weight:700;font-size:.88rem;margin-bottom:2px}
-    .toast-custom .toast-msg{font-size:.78rem;color:var(--text-muted);line-height:1.5}
-
-    /* Satınalma formu — rol bazlı gizle */
-    .procurement-only{display:none}
-
-    /* Zimmet tablo */
-    .zimmet-table{width:100%;border-collapse:collapse}
-    .zimmet-table th{padding:10px 16px;text-align:left;font-size:.68rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);background:var(--surface-2)}
-    .zimmet-table td{padding:12px 16px;font-size:.84rem;border-bottom:1px solid var(--border)}
-    .zimmet-table tr:last-child td{border-bottom:none}
-    .zimmet-table tr:hover{background:var(--surface-2)}
-
-    /* Stok bilgi */
-    .stok-info{background:var(--success-dim);border:1px solid rgba(5,150,105,.2);border-radius:var(--radius-sm);padding:10px 14px;font-size:.8rem;color:var(--success);font-weight:500;display:none;align-items:center;gap:8px}
-    .stok-info.show{display:flex}
-    .stok-info.warning{background:var(--warning-dim);border-color:rgba(217,119,6,.2);color:var(--warning)}
-
-    /* Animations */
-    @keyframes fadeSlideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
-    @keyframes pulse{0%,100%{box-shadow:0 0 0 4px var(--primary-dim)}50%{box-shadow:0 0 0 8px rgba(37,99,235,.08)}}
-
-    /* Responsive */
-    @media(max-width:768px){
-      .app-header{padding:0 16px}
-      .app-main{padding:24px 16px 60px}
-      .form-grid.cols-2,.form-grid.cols-3{grid-template-columns:1fr}
-      .form-footer{flex-direction:column;align-items:stretch}
-      .timeline{flex-wrap:wrap;gap:8px}
-      .timeline-step::after{display:none}
-      .tab-nav{flex-wrap:wrap}
-    }
-    @media(max-width:480px){
-      .app-nav{display:none}
-      .page-header h1{font-size:1.4rem}
-    }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <?!= include('Styles') ?>
 </head>
-
 <body>
 
-  <!-- ═══════════════════════════════
-       LOGIN GATE
-  ═══════════════════════════════ -->
-  <div class="login-overlay" id="login-gate">
-    <div class="login-card">
-      <div class="login-icon">🔐</div>
-      <h2>Erişim Şifresi</h2>
-      <p class="login-subtitle">Bu sisteme erişmek için şirket şifresini giriniz.</p>
-      <input type="password" id="login-input" placeholder="••••••••" maxlength="20">
-      <button class="btn-login" onclick="checkLogin()">Giriş Yap</button>
-      <div class="login-error-msg" id="login-error">Hatalı şifre. Tekrar deneyiniz.</div>
-    </div>
-  </div>
+  <!-- ═══════════════════════════════════════════════════
+       SUNUCU TARAFINDA ENJEKSİYON — Kullanıcı bilgileri
+       Bu değişkenler Code.gs doGet() içinde set edilir.
+  ═══════════════════════════════════════════════════ -->
+  <script>
+    const CURRENT_USER = <?!= user ?>;
+    const USER_ROLE    = "<?= userRole ?>";
+    const USER_NAME    = "<?= userName ?>";
+    const USER_EMAIL   = "<?= userEmail ?>";
+  </script>
 
   <!-- ═══════════════════════════════
        HEADER
@@ -205,124 +27,272 @@
     <div class="app-logo">
       <span class="logo-dot"></span>
       Tedarik Sistemi
-      <span class="version-badge">v2.0</span>
+      <span class="version-badge">v3.0</span>
     </div>
     <nav class="app-nav">
-      <a href="index.html" class="active">Talep Oluştur</a>
-      <a href="dashboard.html">Dashboard</a>
+      <!-- Rol bazlı sekme görünürlüğü sunucu tarafında kontrol edilir -->
+      <a href="#" class="active" onclick="switchMainView('dashboard'); return false;">Dashboard</a>
+      <a href="#" onclick="switchMainView('talep'); return false;">Yeni Talep</a>
+      <? if (userRole === "IT" || userRole === "Procurement" || userRole === "Director") { ?>
+        <a href="#" onclick="switchMainView('stok'); return false;">Stok</a>
+      <? } ?>
+      <? if (userRole === "Procurement" || userRole === "Director") { ?>
+        <a href="#" onclick="switchMainView('satinalmaForm'); return false;">Satınalma</a>
+      <? } ?>
     </nav>
-    <div class="header-right" id="header-right" style="display:none;">
-      <div style="font-size:.75rem;color:var(--text-dim);display:flex;align-items:center;gap:6px;">
-        <span id="user-role-badge" class="badge-custom badge-info" style="font-size:.62rem;"></span>
+    <div class="header-right">
+      <div class="user-chip">
+        <div class="avatar"><?= userName.charAt(0).toUpperCase() ?></div>
+        <span><?= userName ?></span>
+        <span class="role-tag role-<?= userRole.toLowerCase() ?>"><?= userRole ?></span>
       </div>
     </div>
   </header>
 
   <!-- ═══════════════════════════════
-       MAIN CONTENT
+       ANA İÇERİK
   ═══════════════════════════════ -->
-  <main class="app-main">
-    <div class="page-header">
-      <div class="eyebrow">// Tedarik ve Zimmet Yönetimi</div>
-      <h1>Talep & Zimmet Paneli</h1>
-      <p class="subtitle">Yeni talep oluşturun, taleplerinizin durumunu takip edin ve zimmet bilgilerinize erişin.</p>
+  <main class="app-main" id="app-main">
+
+    <!-- ══════════════════════════════════
+         VIEW: DASHBOARD
+    ══════════════════════════════════ -->
+    <div class="view-panel active" id="view-dashboard">
+
+      <div class="page-header">
+        <div class="eyebrow">// <?= userName ?> — <?= userRole ?></div>
+        <h1>Dashboard</h1>
+        <p class="subtitle">Taleplerinizi takip edin ve onay işlemlerinizi yönetin.</p>
+      </div>
+
+      <!-- İstatistikler -->
+      <div class="stats-grid" id="stats-row">
+        <div class="stat-card accent-primary">
+          <div class="stat-label">Taleplerim</div>
+          <div class="stat-value" id="s-total">—</div>
+        </div>
+        <? if (userRole !== "User") { ?>
+        <div class="stat-card accent-warning">
+          <div class="stat-label">Onay Bekleyen</div>
+          <div class="stat-value" id="s-onay" style="color:var(--warning)">—</div>
+        </div>
+        <? } ?>
+        <? if (userRole === "Director" || userRole === "Procurement") { ?>
+        <div class="stat-card accent-info">
+          <div class="stat-label">Satınalma</div>
+          <div class="stat-value" id="s-satinalma" style="color:var(--primary)">—</div>
+        </div>
+        <? } ?>
+        <? if (userRole === "Director") { ?>
+        <div class="stat-card accent-danger">
+          <div class="stat-label">Reddedilen</div>
+          <div class="stat-value" id="s-red" style="color:var(--danger)">—</div>
+        </div>
+        <? } ?>
+      </div>
+
+      <!-- TAB SİSTEMİ — Rol bazlı tablar -->
+      <div class="tab-nav" id="dash-tabs">
+        <button class="tab-btn active" data-tab="taleplerim" onclick="switchTab(this)">📋 Taleplerim</button>
+        <!-- Onaycı rolleri için "Onay Bekleyenler" tabı — sunucu tarafında enjekte edilir -->
+        <? if (userRole === "Manager" || userRole === "IT" || userRole === "Procurement" || userRole === "Director") { ?>
+          <button class="tab-btn" data-tab="onayBekleyen" onclick="switchTab(this)">
+            ⏳ Onaylanacaklar <span class="tab-count" id="onay-count">0</span>
+          </button>
+          <button class="tab-btn" data-tab="gecmisOnay" onclick="switchTab(this)">📜 Geçmiş Onaylarım</button>
+        <? } ?>
+        <button class="tab-btn" data-tab="zimmet" onclick="switchTab(this)">📦 Zimmetlerim</button>
+        <? if (userRole === "Director") { ?>
+          <button class="tab-btn" data-tab="tumTalepler" onclick="switchTab(this)">🗂️ Tüm Talepler</button>
+        <? } ?>
+      </div>
+
+      <!-- TAB İÇERİKLERİ -->
+
+      <!-- TALEPLERİM -->
+      <div class="tab-content active" id="tab-taleplerim">
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <span class="table-title">Taleplerim</span>
+            <button class="btn btn-outline btn-sm" onclick="loadDashboard()">↻ Yenile</button>
+          </div>
+          <div id="taleplerim-body">
+            <div class="empty-row">⏳ Yükleniyor…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ONAY BEKLEYENLER — Sadece onaycı roller görür (sunucu tarafında) -->
+      <? if (userRole === "Manager" || userRole === "IT" || userRole === "Procurement" || userRole === "Director") { ?>
+      <div class="tab-content" id="tab-onayBekleyen">
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <span class="table-title">Onaylanacak Talepler</span>
+            <span class="table-meta" id="onay-meta">—</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Tarih</th>
+                <th>Talep Eden</th>
+                <th>Departman</th>
+                <th>Ürün</th>
+                <th>Miktar</th>
+                <th>Süreç</th>
+                <th>Durum</th>
+                <!-- ONAY BUTONLARI — Sadece burada render edilir -->
+                <th style="text-align:right">İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="onay-tbody">
+              <tr><td colspan="9" class="empty-row">⏳ Yükleniyor…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- GEÇMİŞ ONAYLARIM -->
+      <div class="tab-content" id="tab-gecmisOnay">
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <span class="table-title">Geçmiş Onaylarım</span>
+            <span class="table-meta" id="gecmis-meta">—</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th><th>Tarih</th><th>Talep Eden</th><th>Ürün</th>
+                <th>Miktar</th><th>Süreç</th><th>Durum</th><th>Son İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="gecmis-tbody">
+              <tr><td colspan="8" class="empty-row">⏳ Yükleniyor…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <? } ?>
+
+      <!-- ZİMMETLERİM -->
+      <div class="tab-content" id="tab-zimmet">
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <span class="table-title">Zimmetlerim</span>
+            <? if (userRole === "IT" || userRole === "Director" || userRole === "Procurement") { ?>
+              <button class="btn btn-primary btn-sm" onclick="openZimmetModal()">+ Zimmet Oluştur</button>
+            <? } ?>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th><th>Ürün</th><th>Seri No</th>
+                <th>Teslim Tarihi</th><th>Teslim Eden</th><th>Durum</th>
+                <? if (userRole === "IT" || userRole === "Director" || userRole === "Procurement") { ?>
+                  <th style="text-align:right">İşlem</th>
+                <? } ?>
+              </tr>
+            </thead>
+            <tbody id="zimmet-tbody">
+              <tr><td colspan="7" class="empty-row">⏳ Yükleniyor…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TÜM TALEPLER — Sadece Director -->
+      <? if (userRole === "Director") { ?>
+      <div class="tab-content" id="tab-tumTalepler">
+        <div class="filter-bar">
+          <button class="filter-chip active" data-f="Tümü" onclick="setGlobalFilter(this)">Tümü</button>
+          <button class="filter-chip" data-f="Müdür Onayı Bekliyor" onclick="setGlobalFilter(this)">Müdür</button>
+          <button class="filter-chip" data-f="Teknik Onay Bekliyor" onclick="setGlobalFilter(this)">Teknik</button>
+          <button class="filter-chip" data-f="Satınalma" onclick="setGlobalFilter(this)">Satınalma</button>
+          <button class="filter-chip" data-f="Sipariş" onclick="setGlobalFilter(this)">Sipariş</button>
+          <button class="filter-chip" data-f="Teslim" onclick="setGlobalFilter(this)">Teslim</button>
+          <button class="filter-chip" data-f="Reddedildi" onclick="setGlobalFilter(this)">Red</button>
+          <input type="text" class="search-input" placeholder="🔍 Ara…" id="global-search" oninput="renderGlobalTable()">
+        </div>
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <span class="table-title">Tüm Talepler</span>
+            <span class="table-meta" id="global-meta">—</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th><th>Tarih</th><th>Talep Eden</th><th>Departman</th>
+                <th>Ürün</th><th>Miktar</th><th>Süreç</th><th>Durum</th><th style="text-align:right">İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="global-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <? } ?>
     </div>
 
-    <!-- TAB NAVİGASYON -->
-    <div class="tab-nav" id="main-tabs">
-      <button class="tab-btn active" data-tab="talep" onclick="switchTab(this)">
-        📋 Yeni Talep
-      </button>
-      <button class="tab-btn" data-tab="taleplerim" onclick="switchTab(this)">
-        📊 Taleplerim
-      </button>
-      <button class="tab-btn" data-tab="zimmet" onclick="switchTab(this)">
-        📦 Zimmetlerim
-      </button>
-      <button class="tab-btn procurement-only" data-tab="satinalma" onclick="switchTab(this)">
-        🛒 Satınalma
-      </button>
-    </div>
+    <!-- ══════════════════════════════════
+         VIEW: YENİ TALEP FORMU
+    ══════════════════════════════════ -->
+    <div class="view-panel" id="view-talep">
+      <div class="page-header">
+        <div class="eyebrow">// Yeni Talep</div>
+        <h1>Satınalma Talebi Oluştur</h1>
+        <p class="subtitle">Talebiniz otomatik olarak departman müdürünüzün onayına gönderilir.</p>
+      </div>
 
-    <!-- ═════════════════════════════
-         TAB 1: YENİ TALEP FORMU
-    ═════════════════════════════ -->
-    <div class="tab-content active" id="tab-talep">
       <form class="card" id="talep-form" novalidate>
-
-        <!-- Talep Eden -->
         <div class="form-section">
-          <div class="section-title">Talep Eden Bilgisi</div>
+          <div class="section-title">Talep Eden</div>
           <div class="form-grid cols-2">
             <div class="field">
-              <label>Personel <span class="req">*</span></label>
-              <select id="talep-personel">
-                <option value="">— Personel Seçiniz —</option>
-              </select>
-              <span class="err-msg">Personel seçimi zorunludur.</span>
+              <label>Ad Soyad</label>
+              <input type="text" value="<?= userName ?>" readonly style="background:var(--surface-2);color:var(--text-muted);">
             </div>
             <div class="field">
               <label>Departman</label>
-              <input type="text" id="talep-departman" readonly placeholder="Otomatik doldurulur">
+              <input type="text" value="<?= CURRENT_USER ? JSON.parse(user).departman : '' ?>" readonly style="background:var(--surface-2);color:var(--text-muted);">
             </div>
           </div>
         </div>
 
-        <!-- Ürün Bilgisi -->
         <div class="form-section">
           <div class="section-title">Ürün / Hizmet Bilgisi</div>
-          <div class="form-grid">
-            <div class="form-grid cols-2">
-              <div class="field">
-                <label>Stoktan Seç</label>
-                <select id="talep-urun-stok" onchange="onStokSelect()">
-                  <option value="">— Stoktan ürün seçin —</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>veya Manuel Girin <span class="req">*</span></label>
-                <input type="text" id="talep-urun-adi" placeholder="Örn: Laptop, Yazılım Lisansı…">
-                <span class="err-msg">Ürün adı zorunludur.</span>
-              </div>
-            </div>
-            <div class="stok-info" id="stok-bilgi">
-              <span>📦</span>
-              <span id="stok-bilgi-text"></span>
+          <div class="form-grid cols-2">
+            <div class="field">
+              <label>Stoktan Seç</label>
+              <select id="f-urun-stok" onchange="onStokSelect()">
+                <option value="">— Stoktan ürün seçin —</option>
+              </select>
             </div>
             <div class="field">
-              <label>Açıklama / Teknik Notlar</label>
-              <textarea id="talep-aciklama"
-                placeholder="Teknik özellikler, marka tercihi veya ek notlar…"></textarea>
+              <label>veya Manuel Girin <span class="req">*</span></label>
+              <input type="text" id="f-urun-adi" placeholder="Örn: Laptop, Yazılım Lisansı…">
+              <span class="err-msg">Ürün adı zorunludur.</span>
             </div>
+          </div>
+          <div class="stok-bilgi" id="stok-bilgi"></div>
+          <div class="field" style="margin-top:16px;">
+            <label>Açıklama / Teknik Notlar</label>
+            <textarea id="f-aciklama" placeholder="Teknik özellikler, marka tercihi…"></textarea>
           </div>
         </div>
 
-        <!-- Miktar -->
         <div class="form-section">
           <div class="section-title">Miktar</div>
           <div class="form-grid cols-3">
             <div class="field">
-              <label>Miktar <span class="req">*</span></label>
-              <input type="number" id="talep-miktar" placeholder="1" min="1" step="1" value="1">
-              <span class="err-msg">Geçerli bir miktar giriniz.</span>
-            </div>
-            <div class="field" style="grid-column:span 2;">
-              <label>&nbsp;</label>
-              <div class="stok-info" id="stok-yeterlilik" style="display:none;">
-                <span id="stok-yeterlilik-icon">✅</span>
-                <span id="stok-yeterlilik-text"></span>
-              </div>
+              <label>Adet <span class="req">*</span></label>
+              <input type="number" id="f-miktar" value="1" min="1" step="1">
+              <span class="err-msg">Geçerli miktar giriniz.</span>
             </div>
           </div>
         </div>
 
-        <!-- Footer -->
         <div class="form-footer">
-          <p class="hint">
-            Talep gönderildikten sonra departman müdürünüze otomatik onay e-postası iletilecektir.
-            Süreç, stok durumuna göre otomatik yönlendirilir.
-          </p>
-          <button type="submit" class="btn btn-primary" id="submit-btn">
+          <p class="hint">Talebiniz müdürünüze e-posta ile iletilecektir. Süreç, stok durumuna göre otomatik yönlendirilir.</p>
+          <button type="submit" class="btn btn-primary" id="talep-submit">
             <div class="spinner"></div>
             <span class="btn-label">Talebi Gönder →</span>
           </button>
@@ -330,764 +300,151 @@
       </form>
     </div>
 
-    <!-- ═════════════════════════════
-         TAB 2: TALEPLERİM
-    ═════════════════════════════ -->
-    <div class="tab-content" id="tab-taleplerim">
-      <div class="card">
-        <div style="padding:16px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-weight:700;font-size:.95rem;">Taleplerim</span>
-          <button class="btn btn-outline" style="font-size:.75rem;padding:6px 12px;" onclick="loadMyTalepler()">↻ Yenile</button>
-        </div>
-        <div id="taleplerim-body" style="padding:24px;">
-          <div style="text-align:center;padding:40px;color:var(--text-muted);">
-            <span style="font-size:2rem;display:block;margin-bottom:8px;opacity:.5;">📊</span>
-            <p style="font-size:.85rem;">Personel seçimi yapıldığında talepleriniz burada görünecektir.</p>
-          </div>
-        </div>
+    <!-- ══════════════════════════════════
+         VIEW: STOK — IT, Procurement, Director
+    ══════════════════════════════════ -->
+    <? if (userRole === "IT" || userRole === "Procurement" || userRole === "Director") { ?>
+    <div class="view-panel" id="view-stok">
+      <div class="page-header">
+        <div class="eyebrow">// Envanter</div>
+        <h1>Stok Durumu</h1>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Ürün ID</th><th>Ürün Adı</th><th>Kategori</th>
+              <th style="text-align:center">Mevcut</th><th style="text-align:center">Kritik</th>
+              <th>Birim</th><th>Durum</th>
+            </tr>
+          </thead>
+          <tbody id="stok-tbody">
+            <tr><td colspan="7" class="empty-row">⏳ Yükleniyor…</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
+    <? } ?>
 
-    <!-- ═════════════════════════════
-         TAB 3: ZİMMETLERİM
-    ═════════════════════════════ -->
-    <div class="tab-content" id="tab-zimmet">
-      <div class="card">
-        <div style="padding:16px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-weight:700;font-size:.95rem;">Zimmetlerim</span>
-          <button class="btn btn-outline" style="font-size:.75rem;padding:6px 12px;" onclick="loadMyZimmet()">↻ Yenile</button>
-        </div>
-        <div id="zimmet-body" style="padding:0;">
-          <div style="text-align:center;padding:40px;color:var(--text-muted);">
-            <span style="font-size:2rem;display:block;margin-bottom:8px;opacity:.5;">📦</span>
-            <p style="font-size:.85rem;">Personel seçimi yapıldığında zimmetleriniz burada görünecektir.</p>
+    <!-- ══════════════════════════════════
+         VIEW: SATINALMA FORMU — Procurement, Director
+    ══════════════════════════════════ -->
+    <? if (userRole === "Procurement" || userRole === "Director") { ?>
+    <div class="view-panel" id="view-satinalmaForm">
+      <div class="page-header">
+        <div class="eyebrow">// Satınalma Birimi</div>
+        <h1>Satınalma Kaydı Oluştur</h1>
+      </div>
+      <form class="card" id="sat-form" novalidate>
+        <div class="form-section">
+          <div class="section-title">Talep Seçimi</div>
+          <div class="form-grid cols-2">
+            <div class="field">
+              <label>Talep <span class="req">*</span></label>
+              <select id="s-talep-id"><option value="">— Bekleyen talepler —</option></select>
+            </div>
+            <div class="field">
+              <label>Ürün</label>
+              <input type="text" id="s-urun-adi" readonly>
+            </div>
           </div>
         </div>
-      </div>
+        <div class="form-section">
+          <div class="section-title">Tedarik Detayları</div>
+          <div class="form-grid cols-2">
+            <div class="field">
+              <label>Firma <span class="req">*</span></label>
+              <input type="text" id="s-firma" placeholder="Tedarikçi firma">
+            </div>
+            <div class="field">
+              <label>Birim Fiyat <span class="req">*</span></label>
+              <input type="number" id="s-fiyat" placeholder="0.00" min="0" step="0.01">
+            </div>
+          </div>
+          <div class="form-grid cols-3" style="margin-top:16px;">
+            <div class="field">
+              <label>Döviz <span class="req">*</span></label>
+              <select id="s-doviz"><option value="">— Seç —</option><option value="TRY">₺ TRY</option><option value="USD">$ USD</option><option value="EUR">€ EUR</option></select>
+            </div>
+            <div class="field">
+              <label>Ödeme Tipi</label>
+              <select id="s-odeme"><option value="">— Seç —</option><option>Nakit</option><option>Çek</option><option>EFT / Havale</option><option>Kredi Kartı</option></select>
+            </div>
+            <div class="field">
+              <label>Vade</label>
+              <input type="text" id="s-vade" placeholder="30 gün">
+            </div>
+          </div>
+          <div class="form-grid cols-2" style="margin-top:16px;">
+            <div class="field">
+              <label>Bütçe Kodu</label>
+              <input type="text" id="s-butce" placeholder="BTC-2024-IT">
+            </div>
+            <div class="field"><label>&nbsp;</label>
+              <div class="price-card" id="s-toplam-card" style="display:none;">
+                <span class="price-label">TOPLAM</span>
+                <span class="price-amount" id="s-toplam">—</span>
+              </div>
+            </div>
+          </div>
+          <div class="kritik-uyari" id="s-kritik" style="display:none;">🚨 KRİTİK ALIM: 100.000 TL üzeri — Direktör onayı gerekecek.</div>
+        </div>
+        <div class="form-footer">
+          <p class="hint">100K TL üzeri alımlar otomatik olarak Direktör onayına gönderilir.</p>
+          <button type="submit" class="btn btn-primary" id="sat-submit">
+            <div class="spinner"></div>
+            <span class="btn-label">Kayıt Oluştur →</span>
+          </button>
+        </div>
+      </form>
     </div>
+    <? } ?>
 
-    <!-- ═════════════════════════════
-         TAB 4: SATINALMA (Sadece Procurement rolü)
-    ═════════════════════════════ -->
-    <div class="tab-content" id="tab-satinalma">
-      <div class="card">
-        <div style="padding:16px 24px;border-bottom:1px solid var(--border);">
-          <span style="font-weight:700;font-size:.95rem;">Satınalma Kaydı Oluştur</span>
-        </div>
-        <form id="satinalma-form" novalidate>
-          <div class="form-section">
-            <div class="section-title">Talep Bilgisi</div>
-            <div class="form-grid cols-2">
-              <div class="field">
-                <label>Talep ID <span class="req">*</span></label>
-                <select id="sat-talep-id">
-                  <option value="">— Satınalma bekleyen talepler —</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>Ürün Adı</label>
-                <input type="text" id="sat-urun-adi" readonly>
-              </div>
-            </div>
-          </div>
-          <div class="form-section">
-            <div class="section-title">Tedarik Detayları</div>
-            <div class="form-grid cols-2">
-              <div class="field">
-                <label>Tedarikçi Firma <span class="req">*</span></label>
-                <input type="text" id="sat-firma" placeholder="Firma adı">
-              </div>
-              <div class="field">
-                <label>Birim Fiyat <span class="req">*</span></label>
-                <input type="number" id="sat-birim-fiyat" placeholder="0.00" min="0" step="0.01">
-              </div>
-            </div>
-            <div class="form-grid cols-3" style="margin-top:16px;">
-              <div class="field">
-                <label>Döviz <span class="req">*</span></label>
-                <select id="sat-doviz">
-                  <option value="">— Seç —</option>
-                  <option value="TRY">₺ TRY</option>
-                  <option value="USD">$ USD</option>
-                  <option value="EUR">€ EUR</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>Ödeme Tipi</label>
-                <select id="sat-odeme">
-                  <option value="">— Seç —</option>
-                  <option>Nakit</option>
-                  <option>Çek</option>
-                  <option>EFT / Havale</option>
-                  <option>Kredi Kartı</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>Vade</label>
-                <input type="text" id="sat-vade" placeholder="Örn: 30 gün">
-              </div>
-            </div>
-            <div class="form-grid cols-2" style="margin-top:16px;">
-              <div class="field">
-                <label>Bütçe Kodu</label>
-                <input type="text" id="sat-butce" placeholder="Örn: BTC-2024-IT">
-              </div>
-              <div class="field">
-                <label>&nbsp;</label>
-                <div class="price-card" id="sat-toplam-card" style="display:none;">
-                  <span class="price-label">TOPLAM TUTAR</span>
-                  <span class="price-amount" id="sat-toplam">— —</span>
-                </div>
-              </div>
-            </div>
-            <div class="stok-info warning mt-12" id="sat-kritik-uyari" style="display:none;">
-              <span>🚨</span>
-              <span>KRİTİK ALIM: Tutar 100.000 TL üzeri — Direktör onayı gerekecektir.</span>
-            </div>
-          </div>
-          <div class="form-footer">
-            <p class="hint">Satınalma kaydı oluşturulduğunda, tutar 100.000 TL üzerindeyse otomatik olarak Direktör onayına gönderilir.</p>
-            <button type="submit" class="btn btn-primary" id="sat-submit-btn">
-              <div class="spinner"></div>
-              <span class="btn-label">Kayıt Oluştur →</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
   </main>
 
-  <!-- TOAST -->
-  <div class="toast-custom" id="toast">
-    <span class="toast-icon" id="toast-icon">✅</span>
-    <div class="toast-body">
-      <div class="toast-title" id="toast-title">Başarılı</div>
-      <p class="toast-msg" id="toast-msg">İşlem tamamlandı.</p>
+  <!-- ZİMMET MODAL — Sadece yetkili roller -->
+  <? if (userRole === "IT" || userRole === "Procurement" || userRole === "Director") { ?>
+  <div class="modal-overlay" id="zimmet-modal">
+    <div class="modal-box">
+      <h3>📦 Yeni Zimmet</h3>
+      <p>Demirbaş zimmet kaydı oluşturun.</p>
+      <div class="modal-field"><label>Personel</label><select id="zm-personel"></select></div>
+      <div class="modal-field"><label>Ürün</label><select id="zm-urun"></select></div>
+      <div class="modal-field"><label>Seri / Barkod No</label><input type="text" id="zm-seri" placeholder="SN-2024-00123"></div>
+      <div class="modal-field"><label>Talep ID (opsiyonel)</label><input type="text" id="zm-talep" placeholder="TLP-00001"></div>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeZimmetModal()">İptal</button>
+        <button class="modal-confirm" onclick="submitZimmet()">Oluştur</button>
+      </div>
+    </div>
+  </div>
+  <? } ?>
+
+  <!-- ONAY MODAL -->
+  <div class="modal-overlay" id="confirm-modal">
+    <div class="modal-box">
+      <h3 id="cm-title">İşlem Onayı</h3>
+      <p id="cm-body">Bu işlemi gerçekleştirmek istiyor musunuz?</p>
+      <div class="modal-actions">
+        <button class="modal-cancel" onclick="closeConfirmModal()">İptal</button>
+        <button class="modal-confirm" id="cm-ok">Onayla</button>
+      </div>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════
-       JAVASCRIPT
-  ═══════════════════════════════ -->
-  <script>
-    /* ══════════════════════════════
-       CONFIG
-    ══════════════════════════════ */
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbz9EpgfR15uESBCJMDaovg6KWJmFiw2p11kffWxKLwHxjuIClb9Y-J0bCGBV9lAv0u2/exec";
-    const ACCESS_PASSWORD = "Feal3669";
+  <!-- TOAST -->
+  <div class="toast-box" id="toast">
+    <span class="toast-icon" id="t-icon">✅</span>
+    <div class="toast-body">
+      <div class="toast-title" id="t-title">Başarılı</div>
+      <p class="toast-msg" id="t-msg">İşlem tamamlandı.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       CLIENT-SIDE JAVASCRIPT
+  ═══════════════════════════════════════════════════ -->
+  <?!= include('JavaScript') ?>
 
-    /* ══════════════════════════════
-       STATE
-    ══════════════════════════════ */
-    let personelList = [];
-    let stokList = [];
-    let currentUser = null;
-    let allTalepler = [];
-
-    /* ══════════════════════════════
-       LOGIN
-    ══════════════════════════════ */
-    function checkLogin() {
-      const val = document.getElementById('login-input').value;
-      if (val === ACCESS_PASSWORD) {
-        document.getElementById('login-gate').style.display = 'none';
-        sessionStorage.setItem('auth', '1');
-        initApp();
-      } else {
-        const err = document.getElementById('login-error');
-        err.classList.add('show');
-        setTimeout(() => err.classList.remove('show'), 3000);
-      }
-    }
-
-    document.getElementById('login-input').addEventListener('keydown', e => {
-      if (e.key === 'Enter') checkLogin();
-    });
-
-    if (sessionStorage.getItem('auth') === '1') {
-      document.getElementById('login-gate').style.display = 'none';
-      initApp();
-    }
-
-    /* ══════════════════════════════
-       APP INIT
-    ══════════════════════════════ */
-    async function initApp() {
-      // Paralel yükleme
-      await Promise.all([
-        loadPersonel(),
-        loadStok(),
-      ]);
-    }
-
-    /* ══════════════════════════════
-       VERİ YÜKLEME
-    ══════════════════════════════ */
-    async function loadPersonel() {
-      try {
-        const res = await fetch(`${GAS_URL}?action=getPersonel`);
-        const data = await res.json();
-        personelList = data.rows || [];
-        populatePersonelDropdown();
-      } catch (err) {
-        console.error("Personel yüklenemedi:", err);
-      }
-    }
-
-    async function loadStok() {
-      try {
-        const res = await fetch(`${GAS_URL}?action=getStok`);
-        const data = await res.json();
-        stokList = data.rows || [];
-        populateStokDropdown();
-      } catch (err) {
-        console.error("Stok yüklenemedi:", err);
-      }
-    }
-
-    /* ══════════════════════════════
-       DROPDOWN'LARI DOLDUR
-    ══════════════════════════════ */
-    function populatePersonelDropdown() {
-      const sel = document.getElementById('talep-personel');
-      sel.innerHTML = '<option value="">— Personel Seçiniz —</option>';
-      personelList.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.email;
-        opt.textContent = `${p.isim} — ${p.departman}`;
-        opt.dataset.departman = p.departman;
-        opt.dataset.rol = p.rol;
-        sel.appendChild(opt);
-      });
-
-      sel.addEventListener('change', function () {
-        const selected = personelList.find(p => p.email === this.value);
-        if (selected) {
-          document.getElementById('talep-departman').value = selected.departman;
-          currentUser = selected;
-          applyRoleAccess(selected.rol);
-          loadMyTalepler();
-          loadMyZimmet();
-        } else {
-          document.getElementById('talep-departman').value = '';
-          currentUser = null;
-        }
-      });
-    }
-
-    function populateStokDropdown() {
-      const sel = document.getElementById('talep-urun-stok');
-      sel.innerHTML = '<option value="">— Stoktan ürün seçin —</option>';
-      stokList.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.urunId;
-        opt.textContent = `${s.urunAdi} (Stok: ${s.mevcutStok} ${s.birim})`;
-        opt.dataset.stok = s.mevcutStok;
-        opt.dataset.kritik = s.kritikSeviye;
-        opt.dataset.birim = s.birim;
-        opt.dataset.adi = s.urunAdi;
-        sel.appendChild(opt);
-      });
-    }
-
-    /* ══════════════════════════════
-       ROL BAZLI ERİŞİM
-    ══════════════════════════════ */
-    function applyRoleAccess(role) {
-      const headerRight = document.getElementById('header-right');
-      const roleBadge = document.getElementById('user-role-badge');
-      headerRight.style.display = 'flex';
-
-      const roleLabels = {
-        'User': 'Kullanıcı',
-        'Manager': 'Müdür',
-        'IT': 'IT Birimi',
-        'Director': 'Direktör',
-        'Procurement': 'Satınalma',
-      };
-
-      roleBadge.textContent = roleLabels[role] || role;
-
-      // Satınalma tab'ı sadece Procurement ve Director'a göster
-      const procTabs = document.querySelectorAll('.procurement-only');
-      if (role === 'Procurement' || role === 'Director' || role === 'IT') {
-        procTabs.forEach(t => t.style.display = 'flex');
-        loadSatinalmaTalepler();
-      } else {
-        procTabs.forEach(t => t.style.display = 'none');
-      }
-    }
-
-    /* ══════════════════════════════
-       STOK SEÇİMİ
-    ══════════════════════════════ */
-    function onStokSelect() {
-      const sel = document.getElementById('talep-urun-stok');
-      const opt = sel.options[sel.selectedIndex];
-      const bilgi = document.getElementById('stok-bilgi');
-      const bilgiText = document.getElementById('stok-bilgi-text');
-      const urunAdiInput = document.getElementById('talep-urun-adi');
-
-      if (sel.value) {
-        const stok = parseInt(opt.dataset.stok) || 0;
-        const kritik = parseInt(opt.dataset.kritik) || 0;
-        urunAdiInput.value = opt.dataset.adi;
-
-        bilgi.classList.add('show');
-        if (stok > kritik) {
-          bilgi.classList.remove('warning');
-          bilgiText.textContent = `Stokta mevcut: ${stok} ${opt.dataset.birim}. Stok süreci olarak işlenecek.`;
-        } else if (stok > 0) {
-          bilgi.classList.add('warning');
-          bilgiText.textContent = `⚠️ Düşük stok: ${stok} ${opt.dataset.birim} (Kritik seviye: ${kritik}). Miktar kontrolü yapılacak.`;
-        } else {
-          bilgi.classList.add('warning');
-          bilgiText.textContent = `Stokta yok! Satınalma sürecine yönlendirilecek.`;
-        }
-
-        checkStokYeterlilik();
-      } else {
-        bilgi.classList.remove('show');
-        urunAdiInput.value = '';
-      }
-    }
-
-    function checkStokYeterlilik() {
-      const sel = document.getElementById('talep-urun-stok');
-      const opt = sel.options[sel.selectedIndex];
-      const miktar = parseInt(document.getElementById('talep-miktar').value) || 1;
-      const yeterlilik = document.getElementById('stok-yeterlilik');
-      const yeterlilikText = document.getElementById('stok-yeterlilik-text');
-      const yeterlilikIcon = document.getElementById('stok-yeterlilik-icon');
-
-      if (!sel.value) {
-        yeterlilik.style.display = 'none';
-        return;
-      }
-
-      const stok = parseInt(opt.dataset.stok) || 0;
-      yeterlilik.style.display = 'flex';
-
-      if (stok >= miktar) {
-        yeterlilik.className = 'stok-info show';
-        yeterlilikIcon.textContent = '✅';
-        yeterlilikText.textContent = `Stok yeterli (${stok} ≥ ${miktar}). Stok süreci.`;
-      } else {
-        yeterlilik.className = 'stok-info show warning';
-        yeterlilikIcon.textContent = '⚠️';
-        yeterlilikText.textContent = `Stok yetersiz (${stok} < ${miktar}). Satınalma sürecine yönlendirilecek.`;
-      }
-    }
-
-    document.getElementById('talep-miktar').addEventListener('input', checkStokYeterlilik);
-
-    /* ══════════════════════════════
-       TAB SİSTEMİ
-    ══════════════════════════════ */
-    function switchTab(btn) {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
-    }
-
-    /* ══════════════════════════════
-       TALEP FORMU GÖNDERİMİ
-    ══════════════════════════════ */
-    document.getElementById('talep-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!validateTalepForm()) return;
-
-      const btn = document.getElementById('submit-btn');
-      btn.classList.add('loading');
-      btn.disabled = true;
-
-      const payload = {
-        action: "yeniTalep",
-        talepEdenEmail: document.getElementById('talep-personel').value,
-        urunId: document.getElementById('talep-urun-stok').value || "",
-        urunAdi: document.getElementById('talep-urun-adi').value.trim(),
-        miktar: parseInt(document.getElementById('talep-miktar').value) || 1,
-        teknikNot: document.getElementById('talep-aciklama').value.trim(),
-      };
-
-      try {
-        const res = await fetch(GAS_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-
-        showToast('success', '✅ Talep Gönderildi',
-          `Talebiniz oluşturuldu ve yönetici onayına gönderildi. Dashboard'dan takip edebilirsiniz.`);
-
-        document.getElementById('talep-form').reset();
-        document.getElementById('stok-bilgi').classList.remove('show');
-        document.getElementById('stok-yeterlilik').style.display = 'none';
-        document.getElementById('talep-departman').value = '';
-
-      } catch (err) {
-        showToast('danger', '❌ Hata', 'Gönderim sırasında bir hata oluştu. Lütfen tekrar deneyin.');
-      } finally {
-        btn.classList.remove('loading');
-        btn.disabled = false;
-      }
-    });
-
-    function validateTalepForm() {
-      let ok = true;
-      const fields = [
-        { id: 'talep-personel', check: v => v !== '' },
-        { id: 'talep-urun-adi', check: v => v.trim().length >= 2 },
-        { id: 'talep-miktar', check: v => parseInt(v) > 0 },
-      ];
-
-      fields.forEach(f => {
-        const el = document.getElementById(f.id);
-        if (!f.check(el.value)) { el.classList.add('error'); ok = false; }
-        else el.classList.remove('error');
-      });
-
-      return ok;
-    }
-
-    /* ══════════════════════════════
-       TALEPLERİM — Kişiye özel
-    ══════════════════════════════ */
-    async function loadMyTalepler() {
-      if (!currentUser) return;
-      const body = document.getElementById('taleplerim-body');
-      body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">⏳ Yükleniyor…</div>';
-
-      try {
-        const res = await fetch(`${GAS_URL}?action=getAll`);
-        const data = await res.json();
-        allTalepler = (data.rows || []);
-
-        const myTalepler = allTalepler.filter(t =>
-          t.talepEdenEmail && t.talepEdenEmail.toLowerCase() === currentUser.email.toLowerCase()
-        );
-
-        if (myTalepler.length === 0) {
-          body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);"><span style="font-size:2rem;display:block;margin-bottom:8px;">📋</span>Henüz talebiniz bulunmamaktadır.</div>';
-          return;
-        }
-
-        let html = '';
-        myTalepler.forEach(t => {
-          const durumBadge = getDurumBadge(t.durum);
-          const surecBadge = t.surecTipi ? `<span class="badge-custom badge-neutral" style="font-size:.62rem;">${t.surecTipi}</span>` : '';
-
-          html += `
-          <div style="padding:16px 24px;border-bottom:1px solid var(--border);">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-              <div style="display:flex;align-items:center;gap:8px;">
-                <span style="font-family:var(--font-mono);font-size:.78rem;color:var(--text-dim);">${t.talepId}</span>
-                ${durumBadge}
-                ${surecBadge}
-              </div>
-              <span style="font-family:var(--font-mono);font-size:.72rem;color:var(--text-dim);">${t.tarih || ''}</span>
-            </div>
-            <div style="font-weight:600;font-size:.9rem;margin-bottom:6px;">${t.urunAdi || t.urunId || '—'}</div>
-            <div style="font-size:.78rem;color:var(--text-muted);">Miktar: ${t.miktar || '—'}</div>
-            ${t.teknikNot ? `<div style="font-size:.75rem;color:var(--text-dim);margin-top:4px;font-style:italic;">"${t.teknikNot}"</div>` : ''}
-            <div class="timeline" style="margin-top:12px;">
-              ${buildTimeline(t.durum, t.surecTipi)}
-            </div>
-          </div>`;
-        });
-
-        body.innerHTML = html;
-      } catch (err) {
-        body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--danger);">⚠️ Veriler yüklenemedi.</div>';
-      }
-    }
-
-    /* ══════════════════════════════
-       TIMELINE OLUŞTURUCU
-    ══════════════════════════════ */
-    function buildTimeline(durum, surecTipi) {
-      const stokSteps = [
-        { label: 'Talep', key: 'talep' },
-        { label: 'Müdür', key: 'mudur' },
-        { label: 'Teknik', key: 'teknik' },
-        { label: 'Teslim', key: 'teslim' },
-      ];
-
-      const satinalmaSteps = [
-        { label: 'Talep', key: 'talep' },
-        { label: 'Müdür', key: 'mudur' },
-        { label: 'Teknik', key: 'teknik' },
-        { label: 'Satınalma', key: 'satinalma' },
-        { label: 'Direktör', key: 'direktor' },
-        { label: 'Sipariş', key: 'siparis' },
-        { label: 'Teslim', key: 'teslim' },
-      ];
-
-      const steps = surecTipi === 'Stok' ? stokSteps : satinalmaSteps;
-      const rejected = durum === 'Reddedildi';
-
-      // Hangi aşamadayız belirle
-      const durumMap = {
-        'Müdür Onayı Bekliyor': 'mudur',
-        'Teknik Onay Bekliyor': 'teknik',
-        'Satınalma Aşamasında': 'satinalma',
-        'Direktör Onayı Bekliyor': 'direktor',
-        'Sipariş Edilebilir': 'siparis',
-        'Sipariş Edildi': 'siparis',
-        'Teslim Edilebilir': 'teslim',
-        'Teslim Alındı': 'teslim',
-        'Teslim Edildi': 'teslim',
-        'Reddedildi': null,
-      };
-
-      const currentKey = durumMap[durum] || 'talep';
-      const stepKeys = steps.map(s => s.key);
-      const currentIndex = currentKey ? stepKeys.indexOf(currentKey) : -1;
-
-      let html = '';
-      steps.forEach((step, i) => {
-        let cls = '';
-        if (rejected) {
-          cls = i === 0 ? 'completed' : (i <= currentIndex ? 'rejected' : '');
-        } else if (i < currentIndex) {
-          cls = 'completed';
-        } else if (i === currentIndex) {
-          cls = durum.includes('Teslim') ? 'completed' : 'active';
-        }
-
-        const icon = cls === 'completed' ? '✓'
-          : cls === 'rejected' ? '✕'
-          : cls === 'active' ? (i + 1)
-          : (i + 1);
-
-        html += `
-          <div class="timeline-step ${cls}">
-            <div class="step-dot">${icon}</div>
-            <span class="step-label">${step.label}</span>
-          </div>`;
-      });
-
-      return html;
-    }
-
-    /* ══════════════════════════════
-       ZİMMETLERİM
-    ══════════════════════════════ */
-    async function loadMyZimmet() {
-      if (!currentUser) return;
-      const body = document.getElementById('zimmet-body');
-      body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">⏳ Yükleniyor…</div>';
-
-      try {
-        const res = await fetch(`${GAS_URL}?action=getZimmet`);
-        const data = await res.json();
-        const myZimmet = (data.rows || []).filter(z =>
-          z.personelEmail && z.personelEmail.toLowerCase() === currentUser.email.toLowerCase()
-        );
-
-        if (myZimmet.length === 0) {
-          body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);"><span style="font-size:2rem;display:block;margin-bottom:8px;">📦</span>Üzerinize zimmetli demirbaş bulunmamaktadır.</div>';
-          return;
-        }
-
-        let html = `
-        <table class="zimmet-table">
-          <thead>
-            <tr>
-              <th>Zimmet No</th>
-              <th>Ürün</th>
-              <th>Seri No</th>
-              <th>Teslim Tarihi</th>
-              <th>Durum</th>
-            </tr>
-          </thead>
-          <tbody>`;
-
-        myZimmet.forEach(z => {
-          const durumClass = z.durum === 'Aktif' ? 'badge-success' : 'badge-neutral';
-          html += `
-            <tr>
-              <td style="font-family:var(--font-mono);font-size:.78rem;color:var(--text-dim);">${z.zimmetId}</td>
-              <td style="font-weight:500;">${z.urunAdi || z.urunId || '—'}</td>
-              <td style="font-family:var(--font-mono);font-size:.78rem;">${z.seriNo || '—'}</td>
-              <td style="font-size:.82rem;color:var(--text-muted);">${z.teslimTarihi || '—'}</td>
-              <td><span class="badge-custom ${durumClass}">${z.durum}</span></td>
-            </tr>`;
-        });
-
-        html += '</tbody></table>';
-        body.innerHTML = html;
-      } catch (err) {
-        body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--danger);">⚠️ Veriler yüklenemedi.</div>';
-      }
-    }
-
-    /* ══════════════════════════════
-       SATINALMA TALEPLERİ YÜKLEME
-    ══════════════════════════════ */
-    async function loadSatinalmaTalepler() {
-      try {
-        const res = await fetch(`${GAS_URL}?action=getAll`);
-        const data = await res.json();
-        const satBekleyenler = (data.rows || []).filter(t => t.durum === 'Satınalma Aşamasında');
-
-        const sel = document.getElementById('sat-talep-id');
-        sel.innerHTML = '<option value="">— Satınalma bekleyen talepler —</option>';
-
-        satBekleyenler.forEach(t => {
-          const opt = document.createElement('option');
-          opt.value = t.talepId;
-          opt.textContent = `${t.talepId} — ${t.urunAdi || t.urunId} (${t.miktar} adet)`;
-          opt.dataset.urunAdi = t.urunAdi || t.urunId;
-          opt.dataset.miktar = t.miktar;
-          sel.appendChild(opt);
-        });
-
-        sel.addEventListener('change', function () {
-          const opt = this.options[this.selectedIndex];
-          document.getElementById('sat-urun-adi').value = opt.dataset.urunAdi || '';
-        });
-      } catch (err) {
-        console.error("Satınalma talepleri yüklenemedi:", err);
-      }
-    }
-
-    /* ══════════════════════════════
-       SATINALMA TOPLAM HESAPLAMA
-    ══════════════════════════════ */
-    ['sat-birim-fiyat', 'sat-doviz'].forEach(id => {
-      document.getElementById(id).addEventListener('input', updateSatToplam);
-      document.getElementById(id).addEventListener('change', updateSatToplam);
-    });
-
-    function updateSatToplam() {
-      const fiyat = parseFloat(document.getElementById('sat-birim-fiyat').value) || 0;
-      const doviz = document.getElementById('sat-doviz').value;
-      const talepEl = document.getElementById('sat-talep-id');
-      const talepOpt = talepEl.options[talepEl.selectedIndex];
-      const miktar = parseInt(talepOpt?.dataset?.miktar) || 1;
-      const toplam = fiyat * miktar;
-
-      const sym = { TRY: '₺', USD: '$', EUR: '€' }[doviz] || '';
-      const card = document.getElementById('sat-toplam-card');
-      const kritik = document.getElementById('sat-kritik-uyari');
-
-      if (fiyat > 0 && doviz) {
-        card.style.display = 'flex';
-        document.getElementById('sat-toplam').textContent =
-          `${sym}${toplam.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`;
-
-        // Kritik alım uyarısı (basit TRY varsayımı)
-        if (doviz === 'TRY' && toplam >= 100000) {
-          kritik.style.display = 'flex';
-        } else {
-          kritik.style.display = 'none';
-        }
-      } else {
-        card.style.display = 'none';
-        kritik.style.display = 'none';
-      }
-    }
-
-    /* ══════════════════════════════
-       SATINALMA FORM GÖNDERİMİ
-    ══════════════════════════════ */
-    document.getElementById('satinalma-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const talepId = document.getElementById('sat-talep-id').value;
-      const firma = document.getElementById('sat-firma').value.trim();
-      const birimFiyat = parseFloat(document.getElementById('sat-birim-fiyat').value);
-      const doviz = document.getElementById('sat-doviz').value;
-
-      if (!talepId || !firma || !birimFiyat || !doviz) {
-        showToast('danger', '❌ Eksik Alan', 'Lütfen zorunlu alanları doldurunuz.');
-        return;
-      }
-
-      const talepOpt = document.getElementById('sat-talep-id').options[document.getElementById('sat-talep-id').selectedIndex];
-      const miktar = parseInt(talepOpt?.dataset?.miktar) || 1;
-
-      const btn = document.getElementById('sat-submit-btn');
-      btn.classList.add('loading');
-      btn.disabled = true;
-
-      const payload = {
-        action: "satinalmaKaydi",
-        talepId: talepId,
-        firma: firma,
-        birimFiyat: birimFiyat,
-        miktar: miktar,
-        doviz: doviz,
-        odemeTipi: document.getElementById('sat-odeme').value,
-        vade: document.getElementById('sat-vade').value.trim(),
-        butceKodu: document.getElementById('sat-butce').value.trim(),
-        islemYapan: currentUser ? currentUser.email : '',
-      };
-
-      try {
-        await fetch(GAS_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-
-        showToast('success', '✅ Satınalma Kaydı Oluşturuldu',
-          'Kayıt başarıyla kaydedildi. Tutar 100K TL üzerindeyse Direktör onayına gönderildi.');
-
-        document.getElementById('satinalma-form').reset();
-        document.getElementById('sat-toplam-card').style.display = 'none';
-        document.getElementById('sat-kritik-uyari').style.display = 'none';
-        loadSatinalmaTalepler();
-
-      } catch (err) {
-        showToast('danger', '❌ Hata', 'Kayıt oluşturulamadı.');
-      } finally {
-        btn.classList.remove('loading');
-        btn.disabled = false;
-      }
-    });
-
-    /* ══════════════════════════════
-       YARDIMCI FONKSİYONLAR
-    ══════════════════════════════ */
-    function getDurumBadge(durum) {
-      const map = {
-        'Müdür Onayı Bekliyor': 'badge-warning',
-        'Teknik Onay Bekliyor': 'badge-warning',
-        'Satınalma Aşamasında': 'badge-info',
-        'Direktör Onayı Bekliyor': 'badge-purple',
-        'Sipariş Edilebilir': 'badge-cyan',
-        'Sipariş Edildi': 'badge-cyan',
-        'Teslim Edilebilir': 'badge-success',
-        'Teslim Alındı': 'badge-success',
-        'Teslim Edildi': 'badge-success',
-        'Reddedildi': 'badge-danger',
-        'Beklemede': 'badge-warning',
-        'Onaylandı': 'badge-success',
-      };
-      const cls = map[durum] || 'badge-neutral';
-      return `<span class="badge-custom ${cls}">${durum || '—'}</span>`;
-    }
-
-    function showToast(type, title, msg) {
-      const toast = document.getElementById('toast');
-      const icons = { success: '✅', danger: '❌', warning: '⚠️', info: 'ℹ️' };
-
-      document.getElementById('toast-icon').textContent = icons[type] || '✅';
-      document.getElementById('toast-title').textContent = title;
-      document.getElementById('toast-msg').textContent = msg;
-
-      toast.className = `toast-custom toast-${type}`;
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 5000);
-    }
-  </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>
