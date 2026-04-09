@@ -365,6 +365,7 @@ function switchView(id, btn) {
   var el = document.getElementById("v-" + id);
   if (el) el.classList.add("active");
   if (btn) btn.classList.add("active");
+  if (id === "dashboard") loadDash(); // Dashboard'a dönüldüğünde verileri tazele
   if (id === "satForm") loadSatBekleyen();
 }
 
@@ -529,7 +530,7 @@ function renderTaleplerim() {
   if (!rows.length) { c.innerHTML = '<div class="t-wrap"><div class="empty-r">📋 Henüz talebiniz yok.</div></div>'; return; }
   var html = '<div class="t-wrap"><div class="t-bar"><span class="t-title">Taleplerim</span><button class="btn-p btn-sm btn-o" onclick="loadDash()">↻ Yenile</button></div>';
   rows.forEach(function(t) {
-    html += '<div class="t-card"><div class="t-card-top"><div class="t-card-left"><span class="mono">' + t.talepId + '</span> ' + badge(t.durum) + (t.surecTipi ? ' <span class="bg bg-n">' + t.surecTipi + '</span>' : '') + '</div><span class="mono">' + (t.tarih||'') + '</span></div>';
+    html += '<div class="t-card"><div class="t-card-top"><div class="t-card-left"><span class="mono">' + t.talepId + '</span> ' + badge(t.durum) + (t.bekleyenIsim ? ' <span class="bg bg-n" style="color:var(--warning)">👤 ' + t.bekleyenIsim + '</span>' : '') + (t.surecTipi ? ' <span class="bg bg-n">' + t.surecTipi + '</span>' : '') + '</div><span class="mono">' + (t.tarih||'') + '</span></div>';
     html += '<div style="font-size:.84rem"><strong>' + (t.urunAdi||t.urunId||'—') + '</strong> <span style="color:var(--text-m);font-size:.78rem">&middot; ' + (t.miktar||'') + ' adet</span></div>';
     if (t.teknikNot) html += '<div style="font-size:.72rem;color:var(--text-d);font-style:italic;margin-top:2px">"' + t.teknikNot + '"</div>';
     html += '<div class="timeline">' + timeline(t.durum, t.surecTipi) + '</div></div>';
@@ -759,6 +760,8 @@ function openCMdl(msg, cb) {
   document.getElementById("cm-ok").onclick = function() { closeMdl("c-mdl"); cb(); };
 }
 function closeMdl(id) { document.getElementById(id).classList.remove("open"); }
+// 2 dakikada bir arka planda verileri otomatik güncelle
+setInterval(function() { if (USER) loadDash(); }, 120000);
 </script>
 </body>
 </html>

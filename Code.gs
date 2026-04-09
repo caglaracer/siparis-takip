@@ -172,7 +172,7 @@ function getDashboardData(email) {
     taleplerim: [],
     onayBekleyenler: [],
     gecmisIslemler: [],
-    stok: [],
+    stok: getAllStok(), // Herkesin talep ekranında ürün seçebilmesi için stok herkese açık
     satinalma: [],
     zimmetlerim: [],
     tumTalepler: [],
@@ -185,12 +185,54 @@ function getDashboardData(email) {
   // ── Personel haritası (isim eşleme)
   var persMap = buildPersonelMap();
 
-  // İsim bilgisi ekle
+  // 1. Direktör İsmini Tablodan Bul
+  var directorName = "Direktör"; 
+  for (var emailKey in persMap) {
+    if (persMap[emailKey].rol === "Director") { directorName = persMap[emailKey].isim; break; }
+  }
+
+  // 2. Teknik Onaycı Haritası (Kategorilere göre isimler)
+  var techApproverMap = {};
+  var katSheet = getSheet(CONFIG.SHEETS.KATEGORI_ONAY);
+  if (katSheet && katSheet.getLastRow() >= 2) {
+    var katData = katSheet.getRange(2, 1, katSheet.getLastRow() - 1, 3).getValues();
+    katData.forEach(function(row) {
+      var cat = String(row[0]).toLowerCase().trim();
+      var mail = String(row[2]).toLowerCase().trim();
+      var p = persMap[mail];
+      techApproverMap[cat] = p ? p.isim : row[1];
+    });
+  }
+
+  // 3. Stok Kategorileri (Ürün IDsine göre kategori bulmak için)
+  var stokSheet = getSheet(CONFIG.SHEETS.STOK);
+  var itemCats = {};
+  if (stokSheet && stokSheet.getLastRow() >= 2) {
+    stokSheet.getRange(2, 1, stokSheet.getLastRow() - 1, 3).getValues().forEach(function(r) { 
+      itemCats[String(r[0])] = String(r[2]).toLowerCase().trim(); 
+    });
+  }
+
+  // İsim bilgisi ekle ve BEKLEYEN İSMİ Belirle
   allTalepler.forEach(function(t) {
     var p = persMap[String(t.talepEdenEmail).toLowerCase().trim()];
     t.talepEdenIsim = p ? p.isim : t.talepEdenEmail;
     t.departman = p ? p.departman : "";
     t.yoneticiEmail = p ? p.yoneticiEmail : "";
+
+    // Dinamik Bekleyen İsim Belirleme (İsim + Unvan/Departman eklendi)
+    t.bekleyenIsim = "";
+    if (t.durum === "Müdür Onayı Bekliyor") {
+      var m = persMap[String(t.yoneticiEmail).toLowerCase().trim()];
+      t.bekleyenIsim = m ? m.isim + " (" + m.departman + " Müdürü)" : "Birim Yöneticisi";
+    } else if (t.durum === "Direktör Onayı Bekliyor") {
+      t.bekleyenIsim = directorName + " (Direktör)";
+    } else if (t.durum === "Teknik Onay Bekliyor") {
+      var cat = itemCats[t.urunId] || "IT";
+      t.bekleyenIsim = (techApproverMap[cat] || "Teknik B.") + " (" + cat.toUpperCase() + " Sorumlusu)";
+    } else if (t.durum === "Satınalma Aşamasında") {
+      for (var e in persMap) { if (persMap[e].rol === "Procurement") { t.bekleyenIsim = persMap[e].isim + " (Satınalma Birimi)"; break; } }
+    }
   });
 
   // ═══ ROL BAZLI switch-case ═══
