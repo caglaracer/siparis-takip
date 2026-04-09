@@ -230,8 +230,10 @@ function getDashboardData(email) {
     } else if (t.durum === "Teknik Onay Bekliyor") {
       var cat = itemCats[t.urunId] || "IT";
       t.bekleyenIsim = (techApproverMap[cat] || "Teknik B.") + " (" + cat.toUpperCase() + " Sorumlusu)";
-    } else if (t.durum === "Satınalma Aşamasında") {
+    } else if (t.durum === "Satınalma Aşamasında" || t.durum === "Sipariş Edilebilir") {
       for (var e in persMap) { if (persMap[e].rol === "Procurement") { t.bekleyenIsim = persMap[e].isim + " (Satınalma Birimi)"; break; } }
+    } else if (t.durum === "Sipariş Edildi") {
+      t.bekleyenIsim = "Lojistik/Haberleşme (Teslimat Bekleniyor)";
     }
   });
 
@@ -281,12 +283,12 @@ function getDashboardData(email) {
       result.taleplerim = allTalepler.filter(function(t) {
         return t.talepEdenEmail.toLowerCase() === email.toLowerCase();
       });
-      // ── Teknik onayı geçmiş ve stokta olmayan talepler
+      // ── Satınalma hem fiyat girmesi gerekenleri hem de sipariş geçmesi gerekenleri görür
       result.onayBekleyenler = allTalepler.filter(function(t) {
-        return t.durum === "Satınalma Aşamasında";
+        return ["Satınalma Aşamasında", "Sipariş Edilebilir", "Sipariş Edildi"].indexOf(t.durum) >= 0;
       });
       result.gecmisIslemler = allTalepler.filter(function(t) {
-        return ["Sipariş Edilebilir","Sipariş Edildi","Teslim Alındı","Teslim Edildi","Zimmetlendi"].indexOf(t.durum) >= 0;
+        return ["Teslim Alındı","Teslim Edildi","Zimmetlendi"].indexOf(t.durum) >= 0;
       });
       result.satinalma = getAllSatinalma();
       result.stok = getAllStok();
