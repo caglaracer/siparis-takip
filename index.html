@@ -275,6 +275,34 @@
   </div>
 </div>
 
+<!-- İMZA VE ZİMMET MODAL (KULLANICI GERÇEK TESLİMATI) -->
+<div class="mdl" id="i-mdl">
+  <div class="mdl-box" style="width:500px">
+    <h3>Zimmet Formu (Teslim-Tesellüm)</h3>
+    <div id="print-area" style="padding:20px; border:1px solid var(--border); border-radius:6px; margin-top:12px; background:#fff">
+       <div style="font-size:0.8rem; color:var(--text-m); margin-bottom:18px; display:flex; justify-content:space-between">
+          <span><strong>Talep No:</strong> <span id="imz-tid"></span></span>
+          <span><strong>Tarih:</strong> <span id="imz-date"></span></span>
+       </div>
+       <p style="font-size:0.85rem; line-height:1.6; text-align:justify">
+         Aşağıda bilgileri bulunan <strong><span id="imz-urun" style="color:var(--text)"></span></strong> adlı ürünü eksiksiz, sağlam ve çalışır durumda tarafımdan teslim alınmıştır. Şirket kullanım politikalarına uygun olarak kullanacağımı ve zimmetim süresince sorumluluğunun tarafımda olduğunu beyan ve kabul ediyorum.
+       </p>
+       <p style="font-size:0.85rem; margin-top:18px">
+         <strong>Teslim Alan Personel:</strong> <br><span id="imz-isim" style="font-weight:600"></span>
+       </p>
+       <div style="margin-top:20px; border:2px dashed var(--border); padding:10px; text-align:center; position:relative">
+          <canvas id="sig-canvas" width="400" height="150" style="background:#f8fafc; border-radius:4px; touch-action:none; cursor:crosshair"></canvas>
+          <div style="text-align:right; margin-top:6px"><button class="act-btn" onclick="clearCanvas()">Tazele / Temizle</button></div>
+       </div>
+    </div>
+    <div class="mdl-acts" style="margin-top:20px">
+      <button class="mdl-no" onclick="closeMdl('i-mdl')">İptal</button>
+      <button class="mdl-no" onclick="printZimmet()">🖨️ Yazdır</button>
+      <button class="mdl-ok" onclick="submitImza(this)" style="background:var(--success)">✍️ İmzala ve Onayla</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"><span class="t-icon" id="ti">✅</span><div class="t-body"><div class="t-ttl" id="tt"></div><p class="t-msg" id="tm"></p></div></div>
 
@@ -533,7 +561,14 @@ function renderTaleplerim() {
     html += '<div class="t-card"><div class="t-card-top"><div class="t-card-left"><span class="mono">' + t.talepId + '</span> ' + badge(t.durum) + (t.bekleyenIsim ? ' <span class="bg bg-n" style="color:var(--warning)">👤 ' + t.bekleyenIsim + '</span>' : '') + (t.surecTipi ? ' <span class="bg bg-n">' + t.surecTipi + '</span>' : '') + '</div><span class="mono">' + (t.tarih||'') + '</span></div>';
     html += '<div style="font-size:.84rem"><strong>' + (t.urunAdi||t.urunId||'—') + '</strong> <span style="color:var(--text-m);font-size:.78rem">&middot; ' + (t.miktar||'') + ' adet</span></div>';
     if (t.teknikNot) html += '<div style="font-size:.72rem;color:var(--text-d);font-style:italic;margin-top:2px">"' + t.teknikNot + '"</div>';
-    html += '<div class="timeline">' + timeline(t.durum, t.surecTipi) + '</div></div>';
+    html += '<div class="timeline">' + timeline(t.durum, t.surecTipi) + '</div>';
+    
+    // KULLANICI TESLİM ALMA BUTONU:
+    if (t.durum === "Teslim Alındı" || t.durum === "Teslim Edilebilir") {
+       html += '<div style="margin-top:14px;text-align:right"><button class="btn-p btn-sm" onclick="openImzaMdl(\'' + t.talepId + '\',\'' + (t.urunAdi||t.urunId||'') + '\')" style="background:var(--success)">📦 Formu İmzala ve Teslim Al</button></div>';
+    }
+    
+    html += '</div>';
   });
   c.innerHTML = html + '</div>';
 }
@@ -621,7 +656,7 @@ function dirActs(r) {
       return '<button class="act-btn ok" onclick="doApprove(\'' + id + '\')">✓</button> <button class="act-btn no" onclick="doReject(\'' + id + '\')">✕</button>';
     case "Sipariş Edilebilir": return '<button class="act-btn" onclick="doApprove(\'' + id + '\')">📦 Sipariş</button>';
     case "Sipariş Edildi": return '<button class="act-btn ok" onclick="doApprove(\'' + id + '\')">✓ Teslim Al</button>';
-    case "Teslim Alındı": case "Teslim Edilebilir": return '<button class="act-btn ok" onclick="doApprove(\'' + id + '\')">🏷️ Teslim</button>';
+    case "Teslim Alındı": case "Teslim Edilebilir": return '<span class="bg bg-w">Kullanıcı (Talep Eden) Teslim Alacak</span>';
     default: return '<span class="mono">—</span>';
   }
 }
@@ -729,6 +764,47 @@ function submitZimmet() {
 function doIade(zId) {
   openCMdl("Zimmet " + zId + " iade edilsin mi?", function() {
     apiPost({ action:"returnZimmet", zimmetId:zId, email:USER.email }).then(function() { toast("ok","✅ İade Edildi","Stok güncellendi."); loadDash(); });
+  });
+}
+
+// ═══ İMZA / ZİMMET ALMA EKRANI FONKSİYONLARI ═══
+var sigCanvas, sigCtx, drawing=false;
+function initCanvas() {
+  if (sigCanvas) return;
+  sigCanvas = document.getElementById("sig-canvas");
+  sigCtx = sigCanvas.getContext("2d");
+  sigCtx.lineWidth = 2; sigCtx.strokeStyle = "#0f172a";
+  function getPos(e){ var rect=sigCanvas.getBoundingClientRect(); return {x:(e.clientX||e.touches[0].clientX)-rect.left, y:(e.clientY||e.touches[0].clientY)-rect.top}; }
+  function start(e){ e.preventDefault(); drawing=true; var p=getPos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x, p.y); }
+  function move(e){ e.preventDefault(); if(drawing){ var p=getPos(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); } }
+  function end(e){ e.preventDefault(); drawing=false; }
+  sigCanvas.addEventListener("mousedown", start); sigCanvas.addEventListener("mousemove", move);
+  sigCanvas.addEventListener("mouseup", end); sigCanvas.addEventListener("mouseout", end);
+  sigCanvas.addEventListener("touchstart", start, {passive: false}); sigCanvas.addEventListener("touchmove", move, {passive: false});
+  sigCanvas.addEventListener("touchend", end);
+}
+function clearCanvas() { sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height); sigCtx.beginPath(); }
+var curZimTid = "";
+function openImzaMdl(tid, urun) {
+  curZimTid = tid;
+  document.getElementById("imz-tid").textContent = tid;
+  document.getElementById("imz-urun").textContent = urun;
+  document.getElementById("imz-isim").textContent = USER.isim;
+  var d = new Date(); document.getElementById("imz-date").textContent = ("0"+d.getDate()).slice(-2)+"."+("0"+(d.getMonth()+1)).slice(-2)+"."+d.getFullYear();
+  document.getElementById("i-mdl").classList.add("open");
+  setTimeout(initCanvas, 100); setTimeout(clearCanvas, 150);
+}
+function printZimmet() {
+  var w = window.open('','_blank');
+  w.document.write('<html><head><title>Zimmet / Teslim Tutanağı</title><style>body{font-family:sans-serif;padding:40px;color:#333;line-height:1.6}h2{text-align:center;border-bottom:2px solid #ccc;padding-bottom:10px}</style></head><body><h2>TESLİM - TESELLÜM TUTANAĞI</h2>' + document.getElementById("print-area").innerHTML + '<br><img src="'+sigCanvas.toDataURL()+'" style="margin-top:20px;height:120px;border-bottom:1px solid #333;"><br><strong>İmza</strong></body></html>');
+  w.document.close(); setTimeout(function(){ w.print(); }, 500);
+}
+function submitImza(btn) {
+  btn.innerText = "İşleniyor..."; btn.disabled = true;
+  apiPost({ action:"userTeslimAl", email:USER.email, talepId:curZimTid }).then(function(r) {
+    btn.innerText = "✍️ İmzala ve Onayla"; btn.disabled = false;
+    if(r.success) { closeMdl("i-mdl"); toast("ok","✅ Teslim Alındı","Zimmet kaydı imzalandı ve oluşturuldu."); loadDash(); }
+    else toast("err","Hata",r.error);
   });
 }
 

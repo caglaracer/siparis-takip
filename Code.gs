@@ -116,6 +116,9 @@ function doPost(e) {
       case "markdelivered":
         return json(markDelivered(data.talepId, data.email));
 
+      case "userteslimal":
+        return json(userTeslimAl(data));
+
       default:
         return json({ success: false, error: "Tanımsız action: " + action });
     }
@@ -535,6 +538,45 @@ function createZimmet(data) {
   }
 
   return { success: true, zimmetId: zId };
+}
+
+// ══════════════════════════════════════════════════════════════
+//  KULLANICININ ZİMMETİ/TALEP EDİLENİ TESLİM ALMASI (DİJİTAL İMZA)
+// ══════════════════════════════════════════════════════════════
+function userTeslimAl(data) {
+  var sheet = getSheet(CONFIG.SHEETS.TALEPLER);
+  var tr = findRow(sheet, 1, data.talepId);
+  if (!tr) throw new Error("Talep bulunamadı.");
+
+  var row = sheet.getRange(tr, 1, 1, 14).getValues()[0];
+  if (row[2].toLowerCase() !== data.email.toLowerCase()) throw new Error("Sadece talebi oluşturan kişi form imzalayarak teslim alabilir.");
+
+  if (row[6] !== "Teslim Alındı" && row[6] !== "Teslim Edilebilir") {
+    throw new Error("Bu talep henüz teslim alma aşamasına (stoka/kuruma giriş yapılmış haline) gelmemiş.");
+  }
+
+  // 1. TALEBİN DURUMUNU ZİMMETLENDİ YAP
+  sheet.getRange(tr, 7).setValue("Zimmetlendi");
+  sheet.getRange(tr, 13).setValue(data.email + " (Form İmzalı)");
+  sheet.getRange(tr, 14).setValue(now());
+
+  var not = sheet.getRange(tr, 9).getValue();
+  sheet.getRange(tr, 9).setValue(not + (not?"\n":"") + "[Kullanıcı Zimmet ve Teslim Formunu İmzaladı]");
+
+  // 2. OTOMATİK ZİMMET TABLOSUNA KAYIT
+  // ["ZimmetID","Personel_Email","UrunID","Urun_Adi","SeriNo","Teslim_Tarihi","Teslim_Eden","Durum"]
+  var zSheet = getSheet(CONFIG.SHEETS.ZIMMET);
+  var zId = genId("ZMT", zSheet);
+  zSheet.appendRow([
+    zId, data.email, row[3] || "", row[4] || row[3] || "", "Sistem-" + data.talepId, now(), "Otomatik Sistem İşlemi", "Aktif"
+  ]);
+
+  // 3. STOKTAN DÜŞÜŞ
+  if (row[3]) {
+    updateStok(row[3], -(Number(row[5]) || 1));
+  }
+
+  return { success: true };
 }
 
 // ══════════════════════════════════════════════════════════════
