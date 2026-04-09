@@ -278,27 +278,27 @@
 <!-- İMZA VE ZİMMET MODAL (KULLANICI GERÇEK TESLİMATI) -->
 <div class="mdl" id="i-mdl">
   <div class="mdl-box" style="width:500px">
-    <h3>Zimmet Formu (Teslim-Tesellüm)</h3>
+    <h3 id="imz-title">Zimmet Formu (Teslim-Tesellüm)</h3>
     <div id="print-area" style="padding:20px; border:1px solid var(--border); border-radius:6px; margin-top:12px; background:#fff">
        <div style="font-size:0.8rem; color:var(--text-m); margin-bottom:18px; display:flex; justify-content:space-between">
           <span><strong>Talep No:</strong> <span id="imz-tid"></span></span>
           <span><strong>Tarih:</strong> <span id="imz-date"></span></span>
        </div>
-       <p style="font-size:0.85rem; line-height:1.6; text-align:justify">
+       <p id="imz-desc" style="font-size:0.85rem; line-height:1.6; text-align:justify">
          Aşağıda bilgileri bulunan <strong><span id="imz-urun" style="color:var(--text)"></span></strong> adlı ürünü eksiksiz, sağlam ve çalışır durumda tarafımdan teslim alınmıştır. Şirket kullanım politikalarına uygun olarak kullanacağımı ve zimmetim süresince sorumluluğunun tarafımda olduğunu beyan ve kabul ediyorum.
        </p>
        <p style="font-size:0.85rem; margin-top:18px">
          <strong>Teslim Alan Personel:</strong> <br><span id="imz-isim" style="font-weight:600"></span>
        </p>
-       <div style="margin-top:20px; border:2px dashed var(--border); padding:10px; text-align:center; position:relative">
+       <div id="imz-sig-area" style="margin-top:20px; border:2px dashed var(--border); padding:10px; text-align:center; position:relative">
           <canvas id="sig-canvas" width="400" height="150" style="background:#f8fafc; border-radius:4px; touch-action:none; cursor:crosshair"></canvas>
           <div style="text-align:right; margin-top:6px"><button class="act-btn" onclick="clearCanvas()">Tazele / Temizle</button></div>
        </div>
     </div>
     <div class="mdl-acts" style="margin-top:20px">
       <button class="mdl-no" onclick="closeMdl('i-mdl')">İptal</button>
-      <button class="mdl-no" onclick="printZimmet()">🖨️ Yazdır</button>
-      <button class="mdl-ok" onclick="submitImza(this)" style="background:var(--success)">✍️ İmzala ve Onayla</button>
+      <button class="mdl-no" id="print-btn" onclick="printZimmet()">🖨️ Yazdır</button>
+      <button class="mdl-ok" onclick="submitImza(this)" style="background:var(--success)">✍️ Onayla ve Teslim Al</button>
     </div>
   </div>
 </div>
@@ -558,14 +558,16 @@ function renderTaleplerim() {
   if (!rows.length) { c.innerHTML = '<div class="t-wrap"><div class="empty-r">📋 Henüz talebiniz yok.</div></div>'; return; }
   var html = '<div class="t-wrap"><div class="t-bar"><span class="t-title">Taleplerim</span><button class="btn-p btn-sm btn-o" onclick="loadDash()">↻ Yenile</button></div>';
   rows.forEach(function(t) {
-    html += '<div class="t-card"><div class="t-card-top"><div class="t-card-left"><span class="mono">' + t.talepId + '</span> ' + badge(t.durum) + (t.bekleyenIsim ? ' <span class="bg bg-n" style="color:var(--warning)">👤 ' + t.bekleyenIsim + '</span>' : '') + (t.surecTipi ? ' <span class="bg bg-n">' + t.surecTipi + '</span>' : '') + '</div><span class="mono">' + (t.tarih||'') + '</span></div>';
+    html += '<div class="t-card"><div class="t-card-top"><div class="t-card-left"><span class="mono">' + t.talepId + '</span> ' + badge(t.durum) + (t.bekleyenIsim ? ' <span class="bg bg-n" style="color:var(--warning)">👤 ' + t.bekleyenIsim + '</span>' : '') + (t.surecTipi ? ' <span class="bg bg-n">' + t.surecTipi + '</span>' : '') + ' <span class="bg bg-w" style="border:1px solid var(--border)">' + (t.tur || 'Demirbaş') + '</span></div><span class="mono">' + (t.tarih||'') + '</span></div>';
     html += '<div style="font-size:.84rem"><strong>' + (t.urunAdi||t.urunId||'—') + '</strong> <span style="color:var(--text-m);font-size:.78rem">&middot; ' + (t.miktar||'') + ' adet</span></div>';
     if (t.teknikNot) html += '<div style="font-size:.72rem;color:var(--text-d);font-style:italic;margin-top:2px">"' + t.teknikNot + '"</div>';
     html += '<div class="timeline">' + timeline(t.durum, t.surecTipi) + '</div>';
     
     // KULLANICI TESLİM ALMA BUTONU:
     if (t.durum === "Teslim Alındı" || t.durum === "Teslim Edilebilir") {
-       html += '<div style="margin-top:14px;text-align:right"><button class="btn-p btn-sm" onclick="openImzaMdl(\'' + t.talepId + '\',\'' + (t.urunAdi||t.urunId||'') + '\')" style="background:var(--success)">📦 Formu İmzala ve Teslim Al</button></div>';
+       var isSarf = (t.tur || "").toLowerCase().indexOf("sarf") >= 0;
+       var btnTxt = isSarf ? "✔️ Sarf Malz. Teslim Al" : "📦 Formu İmzala ve Teslim Al";
+       html += '<div style="margin-top:14px;text-align:right"><button class="btn-p btn-sm" onclick="openImzaMdl(\'' + t.talepId + '\',\'' + (t.urunAdi||t.urunId||'') + '\', ' + isSarf + ')" style="background:var(--success)">' + btnTxt + '</button></div>';
     }
     
     html += '</div>';
@@ -785,14 +787,27 @@ function initCanvas() {
 }
 function clearCanvas() { sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height); sigCtx.beginPath(); }
 var curZimTid = "";
-function openImzaMdl(tid, urun) {
+function openImzaMdl(tid, urun, isSarf) {
   curZimTid = tid;
   document.getElementById("imz-tid").textContent = tid;
   document.getElementById("imz-urun").textContent = urun;
   document.getElementById("imz-isim").textContent = USER.isim;
   var d = new Date(); document.getElementById("imz-date").textContent = ("0"+d.getDate()).slice(-2)+"."+("0"+(d.getMonth()+1)).slice(-2)+"."+d.getFullYear();
+  
+  if (isSarf) {
+     document.getElementById("imz-title").textContent = "Tüketim Malzemesi Teslim Onayı";
+     document.getElementById("imz-desc").innerHTML = "Aşağıda bilgileri bulunan <strong>"+urun+"</strong> adlı ürünü talep ettiğim gibi eksiksiz olarak teslim aldım.";
+     document.getElementById("imz-sig-area").style.display = "none";
+     document.getElementById("print-btn").style.display = "none";
+  } else {
+     document.getElementById("imz-title").textContent = "Zimmet Formu (Teslim-Tesellüm)";
+     document.getElementById("imz-desc").innerHTML = "Aşağıda bilgileri bulunan <strong>"+urun+"</strong> adlı ürünü eksiksiz, sağlam ve çalışır durumda tarafımdan teslim alınmıştır. Şirket kullanım politikalarına uygun olarak kullanacağımı ve zimmetim süresince sorumluluğunun tarafımda olduğunu beyan ve kabul ediyorum.";
+     document.getElementById("imz-sig-area").style.display = "block";
+     document.getElementById("print-btn").style.display = "inline-block";
+     setTimeout(initCanvas, 100); setTimeout(clearCanvas, 150);
+  }
+
   document.getElementById("i-mdl").classList.add("open");
-  setTimeout(initCanvas, 100); setTimeout(clearCanvas, 150);
 }
 function printZimmet() {
   var w = window.open('','_blank');

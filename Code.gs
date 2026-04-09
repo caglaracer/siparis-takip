@@ -207,12 +207,14 @@ function getDashboardData(email) {
     });
   }
 
-  // 3. Stok Kategorileri (Ürün IDsine göre kategori bulmak için)
+  // 3. Stok Kategorileri ve TÜR (Demirbaş / Sarf) bilgisi
   var stokSheet = getSheet(CONFIG.SHEETS.STOK);
   var itemCats = {};
+  var itemTypes = {};
   if (stokSheet && stokSheet.getLastRow() >= 2) {
-    stokSheet.getRange(2, 1, stokSheet.getLastRow() - 1, 3).getValues().forEach(function(r) { 
+    stokSheet.getRange(2, 1, stokSheet.getLastRow() - 1, 7).getValues().forEach(function(r) { 
       itemCats[String(r[0])] = String(r[2]).toLowerCase().trim(); 
+      if(r[6]) itemTypes[String(r[0])] = String(r[6]).trim(); // G Sütunu "Tür"
     });
   }
 
@@ -222,6 +224,7 @@ function getDashboardData(email) {
     t.talepEdenIsim = p ? p.isim : t.talepEdenEmail;
     t.departman = p ? p.departman : "";
     t.yoneticiEmail = p ? p.yoneticiEmail : "";
+    t.tur = itemTypes[t.urunId] || "Demirbaş";
 
     // Dinamik Bekleyen İsim Belirleme (İsim + Unvan/Departman eklendi)
     t.bekleyenIsim = "";
@@ -555,23 +558,38 @@ function userTeslimAl(data) {
     throw new Error("Bu talep henüz teslim alma aşamasına (stoka/kuruma giriş yapılmış haline) gelmemiş.");
   }
 
-  // 1. TALEBİN DURUMUNU ZİMMETLENDİ YAP
-  sheet.getRange(tr, 7).setValue("Zimmetlendi");
-  sheet.getRange(tr, 13).setValue(data.email + " (Form İmzalı)");
+  // Türünü Bul (Sarf mı Demirbaş mı?)
+  var isSarf = false;
+  var sSheet = getSheet(CONFIG.SHEETS.STOK);
+  if (sSheet && row[3]) {
+    var sData = sSheet.getDataRange().getValues();
+    for (var i = 1; i < sData.length; i++) {
+       if (String(sData[i][0]) === String(row[3])) {
+          if (String(sData[i][6]).toLowerCase().indexOf("sarf") >= 0) isSarf = true;
+          break;
+       }
+    }
+  }
+
+  // 1. TALEBİN DURUMUNU GÜNCELLE
+  var yeniDurum = isSarf ? "Teslim Edildi" : "Zimmetlendi";
+  sheet.getRange(tr, 7).setValue(yeniDurum);
+  sheet.getRange(tr, 13).setValue(data.email + (isSarf ? " (Teslim Aldı)" : " (Form İmzalı)"));
   sheet.getRange(tr, 14).setValue(now());
 
   var not = sheet.getRange(tr, 9).getValue();
-  sheet.getRange(tr, 9).setValue(not + (not?"\n":"") + "[Kullanıcı Zimmet ve Teslim Formunu İmzaladı]");
+  sheet.getRange(tr, 9).setValue(not + (not?"\n":"") + (isSarf ? "[Sarf Malzemesi Teslim Alındı]" : "[Kullanıcı Zimmet ve Teslim Formunu İmzaladı]"));
 
-  // 2. OTOMATİK ZİMMET TABLOSUNA KAYIT
-  // ["ZimmetID","Personel_Email","UrunID","Urun_Adi","SeriNo","Teslim_Tarihi","Teslim_Eden","Durum"]
-  var zSheet = getSheet(CONFIG.SHEETS.ZIMMET);
-  var zId = genId("ZMT", zSheet);
-  zSheet.appendRow([
-    zId, data.email, row[3] || "", row[4] || row[3] || "", "Sistem-" + data.talepId, now(), "Otomatik Sistem İşlemi", "Aktif"
-  ]);
+  // 2. OTOMATİK ZİMMET TABLOSUNA KAYIT (SADECE DEMİRBAŞ İSE)
+  if (!isSarf) {
+    var zSheet = getSheet(CONFIG.SHEETS.ZIMMET);
+    var zId = genId("ZMT", zSheet);
+    zSheet.appendRow([
+      zId, data.email, row[3] || "", row[4] || row[3] || "", "Sistem-" + data.talepId, now(), "Otomatik Sistem İşlemi", "Aktif"
+    ]);
+  }
 
-  // 3. STOKTAN DÜŞÜŞ
+  // 3. STOKTAN DÜŞÜŞ (Tüm Talepler stoktan düşer)
   if (row[3]) {
     updateStok(row[3], -(Number(row[5]) || 1));
   }
@@ -615,7 +633,7 @@ function getAllStok() {
   var s = getSheet(CONFIG.SHEETS.STOK);
   if (!s || s.getLastRow() < 2) return [];
   return s.getDataRange().getValues().slice(1).map(function(r) {
-    return { urunId: r[0], urunAdi: r[1], kategori: r[2], mevcutStok: r[3], kritikSeviye: r[4], birim: r[5] };
+    return { urunId: r[0], urunAdi: r[1], kategori: r[2], mevcutStok: r[3], kritikSeviye: r[4], birim: r[5], tur: r[6] || "Demirbaş" };
   });
 }
 
@@ -820,7 +838,7 @@ function resultPage(icon, title, msg, color) {
 function setupAllSheets() {
   var ss = getSpreadsheet();
   makeSheet(ss, CONFIG.SHEETS.PERSONEL,    ["PersonelID","Ad_Soyad","Email","Sifre","Departman","Yonetici_Email","Rol"]);
-  makeSheet(ss, CONFIG.SHEETS.STOK,        ["UrunID","Urun_Adi","Kategori","Mevcut_Stok","Kritik_Seviye","Birim"]);
+  makeSheet(ss, CONFIG.SHEETS.STOK,        ["UrunID","Urun_Adi","Kategori","Mevcut_Stok","Kritik_Seviye","Birim","Tur"]);
   makeSheet(ss, CONFIG.SHEETS.KATEGORI_ONAY,["Kategori","Teknik_Birim","Teknik_Onayci_Email"]);
   makeSheet(ss, CONFIG.SHEETS.TALEPLER,    ["TalepID","Tarih","Talep_Eden_Email","UrunID","Urun_Adi","Miktar","Durum","Surec_Tipi","Teknik_Not","Mudur_Onay_Key","Teknik_Onay_Key","Direktor_Onay_Key","Son_Islem_Yapan","Son_Islem_Tarihi"]);
   makeSheet(ss, CONFIG.SHEETS.SATINALMA,   ["SatinalmaID","TalepID","Tedarikci","Birim_Fiyat","Doviz","Toplam_TL","Vade","Odeme_Tipi","Direktor_Durum","Butce_Kodu","Kayit_Tarihi","Islem_Yapan"]);
@@ -848,12 +866,12 @@ function seedSampleData() {
   }
   var s = getSheet(CONFIG.SHEETS.STOK);
   if (s.getLastRow() < 2) {
-    s.appendRow(["STK-001","Laptop (Dell Latitude 5540)","IT",5,2,"Adet"]);
-    s.appendRow(["STK-002","Monitor (24\" LG IPS)","IT",8,3,"Adet"]);
-    s.appendRow(["STK-003","Klavye + Mouse Set","IT",15,5,"Adet"]);
-    s.appendRow(["STK-004","A4 Kağıt (500'lü)","İdari",120,30,"Paket"]);
-    s.appendRow(["STK-005","Toner (HP LaserJet)","İdari",6,2,"Adet"]);
-    s.appendRow(["STK-006","Ofis Koltuğu","İdari",4,2,"Adet"]);
+    s.appendRow(["STK-001","Laptop (Dell Latitude 5540)","IT",5,2,"Adet","Demirbaş"]);
+    s.appendRow(["STK-002","Monitor (24\" LG IPS)","IT",8,3,"Adet","Demirbaş"]);
+    s.appendRow(["STK-003","Klavye + Mouse Set","IT",15,5,"Adet","Demirbaş"]);
+    s.appendRow(["STK-004","A4 Kağıt (500'lü)","İdari",120,30,"Paket","Sarf"]);
+    s.appendRow(["STK-005","Toner (HP LaserJet)","İdari",6,2,"Adet","Sarf"]);
+    s.appendRow(["STK-006","Ofis Koltuğu","İdari",4,2,"Adet","Demirbaş"]);
   }
   var k = getSheet(CONFIG.SHEETS.KATEGORI_ONAY);
   if (k.getLastRow() < 2) {
