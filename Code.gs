@@ -119,6 +119,9 @@ function doPost(e) {
       case "userteslimal":
         return json(userTeslimAl(data));
 
+      case "savestok":
+        return json(saveStok(data));
+
       default:
         return json({ success: false, error: "Tanımsız action: " + action });
     }
@@ -595,6 +598,38 @@ function userTeslimAl(data) {
   }
 
   return { success: true };
+}
+
+// ══════════════════════════════════════════════════════════════
+//  YENİ ÜRÜN EKLE / GÜNCELLE
+// ══════════════════════════════════════════════════════════════
+function saveStok(data) {
+  var s = getSheet(CONFIG.SHEETS.STOK);
+  var rows = s.getDataRange().getValues();
+  var tr = -1;
+  
+  // Varsa güncelle yoksa ekle
+  for(var i=1; i<rows.length; i++) {
+    if (String(rows[i][0]) === String(data.urunId)) { tr = i + 1; break; }
+  }
+  
+  var rowData = [
+    data.urunId, 
+    data.urunAdi, 
+    data.kategori, 
+    Number(data.mevcutStok)||0, 
+    Number(data.kritikSeviye)||0, 
+    data.birim || "Adet",
+    data.tur || "Demirbaş"
+  ];
+  
+  if (tr > 0) {
+    s.getRange(tr, 1, 1, 7).setValues([rowData]);
+  } else {
+    s.appendRow(rowData);
+  }
+  
+  return { success: true, mesaj: "Ürün başarıyla kaydedildi." };
 }
 
 // ══════════════════════════════════════════════════════════════

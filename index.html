@@ -303,6 +303,36 @@
   </div>
 </div>
 
+<!-- STOK MODAL -->
+<div class="mdl" id="s-mdl">
+  <div class="mdl-box">
+    <h3>📦 Ürün Kaydı / Güncelleme</h3>
+    <div class="mdl-fld"><label>Ürün ID (Benzersiz)</label><input type="text" id="ms-id" placeholder="STK-001"></div>
+    <div class="mdl-fld"><label>Ürün Adı</label><input type="text" id="ms-n" placeholder="Dell Latitude Laptop"></div>
+    <div class="mdl-fld"><label>Kategori</label>
+      <select id="ms-k">
+        <option value="IT">IT (Bilgi İşlem)</option>
+        <option value="İdari">İdari İşler</option>
+        <option value="Üretim">Üretim</option>
+        <option value="Diğer">Diğer</option>
+      </select>
+    </div>
+    <div class="mdl-fld"><label>Mevcut Stok</label><input type="number" id="ms-q" value="0"></div>
+    <div class="mdl-fld"><label>Kritik Seviye</label><input type="number" id="ms-c" value="2"></div>
+    <div class="mdl-fld"><label>Birim</label><input type="text" id="ms-b" placeholder="Adet, Paket vb."></div>
+    <div class="mdl-fld"><label>Ürün Türü</label>
+      <select id="ms-t">
+        <option value="Demirbaş">🏗️ Demirbaş (Zimmetlenebilir)</option>
+        <option value="Sarf">🧻 Sarf (Tüketim Malzemesi)</option>
+      </select>
+    </div>
+    <div class="mdl-acts">
+      <button class="mdl-no" onclick="closeMdl('s-mdl')">İptal</button>
+      <button class="mdl-ok" onclick="submitStok(this)">Kaydet</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"><span class="t-icon" id="ti">✅</span><div class="t-body"><div class="t-ttl" id="tt"></div><p class="t-msg" id="tm"></p></div></div>
 
@@ -478,8 +508,9 @@ function buildTalepForm() {
 // ═══ STOK VIEW ═══
 function buildStokView() {
   var v = el("div", "view", "v-stok");
-  v.innerHTML = '<div class="page-hdr"><div class="eye">// Envanter</div><h1>Stok Durumu</h1></div>' +
-    '<div class="t-wrap"><table><thead><tr><th>Ürün ID</th><th>Ürün Adı</th><th>Kategori</th><th style="text-align:center">Mevcut</th><th style="text-align:center">Kritik</th><th>Birim</th><th>Durum</th></tr></thead><tbody id="stk-tbody"><tr><td colspan="7" class="empty-r">⏳</td></tr></tbody></table></div>';
+  var btn = (USER.rol === "IT" || USER.rol === "Director") ? '<button class="btn-p btn-sm" onclick="openStokMdl()">+ Yeni Ürün</button>' : '';
+  v.innerHTML = '<div class="page-hdr"><div class="eye">// Envanter</div><div style="display:flex; justify-content:space-between; align-items:center"><h1>Stok Durumu</h1>' + btn + '</div></div>' +
+    '<div class="t-wrap"><table><thead><tr><th>ID</th><th>Ürün Adı</th><th>Kategori</th><th>Tür</th><th style="text-align:center">Mevcut</th><th style="text-align:center">Kritik</th><th>Birim</th><th>Durum</th></tr></thead><tbody id="stk-tbody"><tr><td colspan="8" class="empty-r">⏳</td></tr></tbody></table></div>';
   return v;
 }
 
@@ -667,13 +698,13 @@ function dirActs(r) {
 function renderStok() {
   var tbody = document.getElementById("stk-tbody"); if (!tbody || !D) return;
   var rows = D.stok || [];
-  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty-r">📦 Stok yok.</td></tr>'; return; }
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty-r">📦 Stok yok.</td></tr>'; return; }
   tbody.innerHTML = rows.map(function(s) {
     var m = Number(s.mevcutStok)||0, k = Number(s.kritikSeviye)||0;
     var pct = Math.min(100, k>0?(m/(k*3))*100:100);
     var bc = m<=k?"sk-cr":m<=k*2?"sk-wn":"sk-ok";
     var sb = m===0?'<span class="bg bg-d">Yok</span>':m<=k?'<span class="bg bg-w">Kritik</span>':'<span class="bg bg-s">Normal</span>';
-    return '<tr><td class="mono">' + s.urunId + '</td><td class="bold">' + s.urunAdi + '</td><td><span class="bg bg-n">' + (s.kategori||'') + '</span></td><td style="text-align:center"><strong>' + m + '</strong><div class="sk-bar"><div class="sk-fill ' + bc + '" style="width:' + pct + '%"></div></div></td><td style="text-align:center;color:var(--text-d)">' + k + '</td><td>' + (s.birim||'') + '</td><td>' + sb + '</td></tr>';
+    return '<tr><td class="mono">' + s.urunId + '</td><td class="bold">' + s.urunAdi + '</td><td><span class="bg bg-n">' + (s.kategori||'') + '</span></td><td><span style="font-size:0.7rem; color:var(--text-m)">' + (s.tur||'Demirbaş') + '</span></td><td style="text-align:center"><strong>' + m + '</strong><div class="sk-bar"><div class="sk-fill ' + bc + '" style="width:' + pct + '%"></div></div></td><td style="text-align:center;color:var(--text-d)">' + k + '</td><td>' + (s.birim||'') + '</td><td>' + sb + '</td></tr>';
   }).join("");
 }
 
@@ -851,6 +882,31 @@ function openCMdl(msg, cb) {
   document.getElementById("cm-ok").onclick = function() { closeMdl("c-mdl"); cb(); };
 }
 function closeMdl(id) { document.getElementById(id).classList.remove("open"); }
+
+// ═══ STOK EKLEME FONKSİYONLARI ═══
+function openStokMdl() { document.getElementById("s-mdl").classList.add("open"); }
+function submitStok(btn) {
+  var id = document.getElementById("ms-id").value.trim();
+  var name = document.getElementById("ms-n").value.trim();
+  if(!id || !name) { toast("err","Hata","ID ve Ad giriniz."); return; }
+  btn.disabled = true; btn.innerText = "Kaydediliyor...";
+  var data = {
+    action: "savestok",
+    urunId: id,
+    urunAdi: name,
+    kategori: document.getElementById("ms-k").value,
+    mevcutStok: document.getElementById("ms-q").value,
+    kritikSeviye: document.getElementById("ms-c").value,
+    birim: document.getElementById("ms-b").value,
+    tur: document.getElementById("ms-t").value
+  };
+  apiPost(data).then(function(r) {
+    btn.disabled = false; btn.innerText = "Kaydet";
+    if(r.success) { closeMdl("s-mdl"); toast("ok","Başarılı",r.mesaj); loadDash(); }
+    else toast("err","Hata",r.error);
+  });
+}
+
 // 2 dakikada bir arka planda verileri otomatik güncelle
 setInterval(function() { if (USER) loadDash(); }, 120000);
 </script>
